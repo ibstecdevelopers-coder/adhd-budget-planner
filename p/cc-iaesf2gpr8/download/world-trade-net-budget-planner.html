@@ -242,7 +242,7 @@ textarea{resize:vertical;min-height:70px}
 'use strict';
 const MODE = document.documentElement.dataset.mode || 'app'; // demo | app | offline
 const KEY = 'worldtradenet:' + (MODE === 'demo' ? 'demo' : 'main') + ':v1';
-const ETSY = 'https://www.etsy.com/shop/worldtradenet';
+const ETSY = 'https://www.etsy.com/listing/4601047837/adhd-budget-planner-app-paycheck-budget';
 
 /* ---------- helpers ---------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -509,7 +509,7 @@ const NAV = [
   '-', ['savings', 'Savings', 'save'], ['debt', 'Debt payoff', 'debt'], ['goals', 'Goals', 'goal'], ['year', 'Year review', 'year'], '-', ['start', 'Start here', 'start'], ['settings', 'Settings', 'gear'],
 ];
 function shell() {
-  const demo = MODE === 'demo' ? `<div class="demo-bar"><span>✨ You're trying the <b>live demo</b> with sample data — everything you change stays in this browser.</span><a href="${ETSY}" target="_blank" rel="noopener">Get the full planner →</a><button data-act="demo-reset">Reset demo</button></div>` : '';
+  const demo = MODE === 'demo' ? `<div class="demo-bar"><span>✨ You're trying the <b>live demo</b> with sample data — everything you change stays in this browser.</span><a href="${ETSY}" target="_blank" rel="noopener">Get the full planner App →</a><button data-act="demo-reset">Reset demo</button></div>` : '';
   document.body.innerHTML = `${demo}<div class="shell" id="shell">
   <aside class="side"><div class="brand"><div class="logo">W</div><div><b>World Trade Net</b><span id="who"></span></div></div>
     <button class="btn pri logbtn" data-act="log">${ic('plus')} Log spending</button>
