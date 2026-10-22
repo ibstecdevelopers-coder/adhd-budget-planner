@@ -671,6 +671,6 @@ window.addEventListener('hashchange', fromHash);
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => S.settings.theme === 'auto' && applyTheme());
 const h0 = location.hash.slice(1); view = VIEWS[h0] ? h0 : (MODE !== 'demo' && !S.tx.length && !S.events.length ? 'start' : 'today');
 render();
-if ('serviceWorker' in navigator && location.protocol.startsWith('http') && MODE !== 'offline') navigator.serviceWorker.register('/sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && MODE !== 'offline') navigator.serviceWorker.register('sw.js').catch(() => {});
 window.__cc = { get S() { return S; }, go };
 })();

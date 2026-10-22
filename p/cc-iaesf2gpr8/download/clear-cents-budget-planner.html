@@ -6,7 +6,7 @@
 <title>Clear Cents — ADHD Budget Planner (offline)</title>
 <meta name="description" content="Clear Cents — an ADHD-friendly budget planner app: safe-to-spend, paycheck plan, bills calendar, savings, debt payoff and goals. Works online or offline. No bank connection.">
 <meta name="theme-color" content="#f5f1ea">
-<meta name="robots" content="noindex">
+<meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%233f7d6e'/><circle cx='256' cy='256' r='150' fill='none' stroke='%23f5f1ea' stroke-width='34' stroke-dasharray='700 300' stroke-linecap='round' transform='rotate(40 256 256)'/><path d='M256 168v176M300 206c-10-16-26-24-44-24-26 0-44 14-44 34 0 46 92 28 92 74 0 20-20 36-48 36-20 0-38-10-48-26' fill='none' stroke='%23f5f1ea' stroke-width='26' stroke-linecap='round'/></svg>">
 <style>:root{
   --bg:#f5f1ea;--panel:#fffdf9;--ink:#22302c;--muted:#6a7671;--line:#e5ded2;--soft:#efe8dc;
@@ -911,7 +911,7 @@ window.addEventListener('hashchange', fromHash);
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => S.settings.theme === 'auto' && applyTheme());
 const h0 = location.hash.slice(1); view = VIEWS[h0] ? h0 : (MODE !== 'demo' && !S.tx.length && !S.events.length ? 'start' : 'today');
 render();
-if ('serviceWorker' in navigator && location.protocol.startsWith('http') && MODE !== 'offline') navigator.serviceWorker.register('/sw.js').catch(() => {});
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && MODE !== 'offline') navigator.serviceWorker.register('sw.js').catch(() => {});
 window.__cc = { get S() { return S; }, go };
 })();
 </script>

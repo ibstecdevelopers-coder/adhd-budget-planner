@@ -1,12 +1,13 @@
-// Clear Cents service worker — lets the app open with no internet (phone or desktop).
-const CACHE = 'clear-cents-v1';
-const CORE = ['/app/', '/demo/', '/start/', '/manifest.webmanifest', '/assets/icon-192.png', '/assets/icon-512.png', '/assets/icon.svg'];
+// Clear Cents service worker — lets the planner open with no internet (phone or desktop).
+// One copy lives in each app folder; it only controls that folder.
+const CACHE = '__CACHE__';
+const CORE = ['./', './manifest.webmanifest', '/assets/icon-192.png', '/assets/icon-512.png', '/assets/icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE && k.startsWith(CACHE.split('-v')[0])).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 // Network first (so updates arrive), cache fallback (so it works offline).
 self.addEventListener('fetch', e => {
@@ -16,6 +17,6 @@ self.addEventListener('fetch', e => {
     fetch(req).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
-    }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('/app/')))
+    }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./')))
   );
 });
