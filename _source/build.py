@@ -22,7 +22,7 @@ PWA = ('<link rel="manifest" href="manifest.webmanifest">'
        '<link rel="apple-touch-icon" href="/assets/icon-192.png">'
        '<meta name="apple-mobile-web-app-capable" content="yes">'
        '<meta name="mobile-web-app-capable" content="yes">'
-       '<meta name="apple-mobile-web-app-title" content="Clear Cents">')
+       '<meta name="apple-mobile-web-app-title" content="World Trade Net">')
 ICON = '<link rel="icon" href="data:image/svg+xml,' + (SRC / "icon.svg").read_text().replace('"', "'").replace("#", "%23").replace("\n", "") + '">'
 NOINDEX = '<meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer">'
 
@@ -49,13 +49,13 @@ if (OUT / "p").exists():
         if d.name != SLUG: shutil.rmtree(d)
 
 files = {
-    "demo/index.html": page("demo", "Clear Cents — Live Demo · ADHD Budget Planner", "", PWA),
-    "demo/manifest.webmanifest": manifest("Clear Cents Demo", "CC Demo"),
-    "demo/sw.js": sw("cc-demo-v2"),
-    f"{PRIV}/index.html": page("app", "Clear Cents — ADHD Budget Planner", NOINDEX, PWA),
-    f"{PRIV}/manifest.webmanifest": manifest("Clear Cents — ADHD Budget Planner", "Clear Cents"),
-    f"{PRIV}/sw.js": sw("cc-app-v2"),
-    f"{PRIV}/download/clear-cents-budget-planner.html": page("offline", "Clear Cents — ADHD Budget Planner (offline)", NOINDEX, ICON),
+    "demo/index.html": page("demo", "World Trade Net — Live Demo · ADHD Budget Planner", "", PWA),
+    "demo/manifest.webmanifest": manifest("World Trade Net Demo", "WTN Demo"),
+    "demo/sw.js": sw("wtn-demo-v3"),
+    f"{PRIV}/index.html": page("app", "World Trade Net — ADHD Budget Planner", NOINDEX, PWA),
+    f"{PRIV}/manifest.webmanifest": manifest("World Trade Net — ADHD Budget Planner", "World Trade Net"),
+    f"{PRIV}/sw.js": sw("wtn-app-v3"),
+    f"{PRIV}/download/world-trade-net-budget-planner.html": page("offline", "World Trade Net — ADHD Budget Planner (offline)", NOINDEX, ICON),
     f"{PRIV}/start/index.html": (SRC / "site" / "start" / "index.html").read_text(),
     "index.html": (SRC / "site" / "index.html").read_text(),
     "vercel.json": (SRC / "vercel.json").read_text(),

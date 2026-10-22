@@ -1,4 +1,4 @@
-// Clear Cents service worker — lets the planner open with no internet (phone or desktop).
+// World Trade Net service worker — lets the planner open with no internet (phone or desktop).
 // One copy lives in each app folder; it only controls that folder.
 const CACHE = '__CACHE__';
 const CORE = ['./', './manifest.webmanifest', '/assets/icon-192.png', '/assets/icon-512.png', '/assets/icon.svg'];

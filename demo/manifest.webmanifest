@@ -1,6 +1,6 @@
 {
-  "name": "Clear Cents Demo",
-  "short_name": "CC Demo",
+  "name": "World Trade Net Demo",
+  "short_name": "WTN Demo",
   "description": "Safe-to-spend, paycheck plan, bills calendar, savings, debt payoff and goals. Works offline. No bank connection.",
   "start_url": "./",
   "scope": "./",

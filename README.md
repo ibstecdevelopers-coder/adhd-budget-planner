@@ -1,4 +1,4 @@
-# Clear Cents — ADHD Budget Planner (Vercel site)
+# World Trade Net — ADHD Budget Planner (Vercel site)
 
 A static website: no framework, no database, no build step on Vercel. Customer data is stored in each buyer's own browser (localStorage), so there's nothing to host except these files.
 
@@ -10,7 +10,7 @@ A static website: no framework, no database, no build step on Vercel. Customer d
 | `/demo/` | Free live demo with sample data + "Get the full planner" banner | Public — link it from Etsy |
 | `/p/cc-iaesf2gpr8/` | **The real planner for buyers** (starts empty, setup checklist) | **Buyers only** — link is in the buyer PDF |
 | `/p/cc-iaesf2gpr8/start/` | Buyer welcome guide: phone install, offline download, backups | Buyers only |
-| `/p/cc-iaesf2gpr8/download/clear-cents-budget-planner.html` | Single-file offline planner | Buyers only |
+| `/p/cc-iaesf2gpr8/download/world-trade-net-budget-planner.html` | Single-file offline planner | Buyers only |
 | `vercel.json` | Clean URLs, old `/app/` `/start/` `/download/` redirect to home, no-index + no-referrer on `/p/` | — |
 | `_source/` | Editable source + `build.py` (not deployed — see `.vercelignore`) | — |
 
@@ -35,11 +35,11 @@ A static website: no framework, no database, no build step on Vercel. Customer d
 **C. Vercel CLI**
 ```
 npm i -g vercel
-cd clear-cents-vercel
+cd world-trade-net-vercel
 vercel --prod
 ```
 
-Tip: name the project something like `clear-cents-budget-planner` so the URL reads well, or add your own domain in Vercel → Settings → Domains.
+Tip: name the project something like `world-trade-net-budget-planner` so the URL reads well, or add your own domain in Vercel → Settings → Domains.
 
 ## After deploying
 
@@ -53,7 +53,7 @@ Edit files in `_source/` (`app.js`, `app.css`, `site/…`), then run:
 ```
 python3 _source/build.py .
 ```
-That regenerates the demo, the hidden buyer app and the pages. Bump the cache names (`cc-app-v2` → `cc-app-v3`) in `_source/build.py` when you ship an update so installed phones fetch the new version.
+That regenerates the demo, the hidden buyer app and the pages. Bump the cache names (`wtn-app-v3` → `wtn-app-v4`) in `_source/build.py` when you ship an update so installed phones fetch the new version.
 
 ## Notes
 - Demo and app use separate browser storage, so playing in the demo never touches a buyer's real planner.

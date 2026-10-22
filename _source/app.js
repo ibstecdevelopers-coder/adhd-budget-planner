@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const MODE = document.documentElement.dataset.mode || 'app'; // demo | app | offline
-const KEY = 'clearcents:' + (MODE === 'demo' ? 'demo' : 'main') + ':v1';
+const KEY = 'worldtradenet:' + (MODE === 'demo' ? 'demo' : 'main') + ':v1';
 const ETSY = 'https://www.etsy.com/shop/worldtradenet';
 
 /* ---------- helpers ---------- */
@@ -271,11 +271,11 @@ const NAV = [
 function shell() {
   const demo = MODE === 'demo' ? `<div class="demo-bar"><span>✨ You're trying the <b>live demo</b> with sample data — everything you change stays in this browser.</span><a href="${ETSY}" target="_blank" rel="noopener">Get the full planner →</a><button data-act="demo-reset">Reset demo</button></div>` : '';
   document.body.innerHTML = `${demo}<div class="shell" id="shell">
-  <aside class="side"><div class="brand"><div class="logo">C</div><div><b>Clear Cents</b><span id="who"></span></div></div>
+  <aside class="side"><div class="brand"><div class="logo">W</div><div><b>World Trade Net</b><span id="who"></span></div></div>
     <button class="btn pri logbtn" data-act="log">${ic('plus')} Log spending</button>
     <nav class="nav">${NAV.map(n => n === '-' ? '<div class="sep"></div>' : `<a href="#${n[0]}" data-view="${n[0]}">${ic(n[2])}${n[1]}</a>`).join('')}</nav>
     <div class="side-foot">Saved on this device only.<br>No bank connection — ever.</div></aside>
-  <div><div class="top"><button class="btn ghost" data-act="menu" aria-label="Menu">${ic('menu')}</button><b>Clear Cents</b><button class="btn ghost" data-act="theme" aria-label="Theme">◐</button></div>
+  <div><div class="top"><button class="btn ghost" data-act="menu" aria-label="Menu">${ic('menu')}</button><b>World Trade Net</b><button class="btn ghost" data-act="theme" aria-label="Theme">◐</button></div>
   <main class="main" id="main"></main></div>
   <button class="btn pri fab" data-act="log">${ic('plus')} Log</button></div>`;
 }
@@ -531,7 +531,7 @@ VIEWS.settings = () => {
 AFTER.settings = () => {
   $('#s-name').addEventListener('change', e => { S.settings.name = e.target.value.trim(); save(); render(); });
   $('#s-cur').addEventListener('change', e => { S.settings.currency = e.target.value; fmtCache = {}; save(); render(); toast('Currency updated'); });
-  $('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (!d.categories || !d.tx) throw 0; if (!confirm('Replace everything in this planner with the backup?')) return; S = Object.assign(blankState(), d); fmtCache = {}; save(); render(); toast('Backup restored'); } catch { alert('That file isn’t a Clear Cents backup.'); } }; r.readAsText(f); });
+  $('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (!d.categories || !d.tx) throw 0; if (!confirm('Replace everything in this planner with the backup?')) return; S = Object.assign(blankState(), d); fmtCache = {}; save(); render(); toast('Backup restored'); } catch { alert('That file isn’t a World Trade Net backup.'); } }; r.readAsText(f); });
 };
 
 /* ---------- modals ---------- */
@@ -629,7 +629,7 @@ function download(name, text, type) { const a = document.createElement('a'); a.h
 function csv() {
   const rows = [['Date', 'Type', 'Category / Fund / Debt', 'Name', 'Amount', 'Notes']];
   S.tx.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(t => rows.push([t.date, t.type, t.type === 'expense' ? cat(t.catId)?.name : t.type === 'saving' ? fund(t.fundId)?.name : t.type === 'debt' ? debt(t.debtId)?.name : 'Income', t.name, t.amount.toFixed(2), t.note]));
-  download('clear-cents-transactions-' + today() + '.csv', rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n'), 'text/csv');
+  download('world-trade-net-transactions-' + today() + '.csv', rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n'), 'text/csv');
 }
 let toastT; function toast(msg) { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2200); }
 
@@ -654,7 +654,7 @@ function onClick(ev) {
     cycle: () => { const g = S.goals.find(x => x.id === id); g.status = { ns: 'ip', ip: 'dn', dn: 'ns' }[g.status]; save(); render(); },
     nospend: () => { const t = today(); if (S.nospend[t]) delete S.nospend[t]; else { S.nospend[t] = true; toast('Nice! No-spend day logged 🌱'); } save(); render(); },
     settheme: () => { S.settings.theme = v; save(); render(); }, accent: () => { S.settings.accent = v; save(); render(); },
-    backup: () => { download('clear-cents-backup-' + today() + '.json', JSON.stringify(S, null, 1), 'application/json'); toast('Backup downloaded'); },
+    backup: () => { download('world-trade-net-backup-' + today() + '.json', JSON.stringify(S, null, 1), 'application/json'); toast('Backup downloaded'); },
     restore: () => $('#restorefile').click(), csv: () => csv(),
     sample: () => { if (confirm('Replace your planner with sample data? (Download a backup first if you want to keep yours.)')) { S = sampleState(); fmtCache = {}; save(); render(); } },
     wipe: () => { if (confirm('Erase everything in this planner? This can’t be undone.')) { S = blankState(); save(); go('start'); } },
