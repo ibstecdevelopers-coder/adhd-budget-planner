@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en" data-mode="app">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Clear Cents — ADHD Budget Planner</title>
+<meta name="description" content="Clear Cents — an ADHD-friendly budget planner app: safe-to-spend, paycheck plan, bills calendar, savings, debt payoff and goals. Works online or offline. No bank connection.">
+<meta name="theme-color" content="#f5f1ea">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/assets/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/assets/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Clear Cents">
+<style>:root{
+  --bg:#f5f1ea;--panel:#fffdf9;--ink:#22302c;--muted:#6a7671;--line:#e5ded2;--soft:#efe8dc;
+  --acc:#3f7d6e;--good:#2e8757;--warn:#c27a1c;--bad:#c0463e;
+  --acc-soft:color-mix(in srgb,var(--acc) 13%,var(--panel));
+  --acc-ink:color-mix(in srgb,var(--acc) 75%,var(--ink));
+  --good-soft:color-mix(in srgb,var(--good) 13%,var(--panel));
+  --warn-soft:color-mix(in srgb,var(--warn) 15%,var(--panel));
+  --bad-soft:color-mix(in srgb,var(--bad) 12%,var(--panel));
+  --shadow:0 1px 2px rgba(40,30,20,.05),0 6px 22px rgba(40,30,20,.06);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:16px;
+  color-scheme:light;
+}
+:root[data-theme=dark]{
+  --bg:#121816;--panel:#1a2220;--ink:#e6eeeb;--muted:#97a6a0;--line:#2a3532;--soft:#212b28;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--acc-ink)}
+h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;margin:0}
+h1{font-size:30px;line-height:1.15}
+h2{font-size:20px}
+h3{font-size:16px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+.money{font-family:var(--serif);font-variant-numeric:tabular-nums lining-nums}
+
+/* layout */
+.shell{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;overflow:auto;padding:22px 14px;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;gap:10px;align-items:center;padding:0 8px 14px}
+.logo{width:36px;height:36px;border-radius:11px;background:var(--acc);color:#fff;display:grid;place-items:center;font:700 17px var(--serif)}
+.brand b{font-family:var(--serif);font-size:17px;display:block;line-height:1.1}
+.brand span{font-size:12px;color:var(--muted)}
+.logbtn{margin:4px 4px 12px;justify-content:center}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:11px;color:var(--ink);text-decoration:none;font-size:14.5px}
+.nav a:hover{background:var(--soft)}
+.nav a.on{background:var(--acc-soft);color:var(--acc-ink);font-weight:600}
+.nav svg{width:18px;height:18px;flex:none;opacity:.85}
+.nav .sep{height:1px;background:var(--line);margin:8px 10px}
+.side-foot{margin-top:auto;padding:12px 10px 0;font-size:12px;color:var(--muted)}
+.main{padding:28px clamp(16px,3.2vw,44px) 90px;max-width:1180px;width:100%}
+.top{display:none}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.pagehead p{margin:6px 0 0;color:var(--muted)}
+.demo-bar{background:#22302c;color:#f5f1ea;--bg:#f5f1ea;font-size:13.5px;padding:9px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center}
+.demo-bar a{color:var(--bg);font-weight:700}
+.demo-bar button{background:transparent;border:1px solid color-mix(in srgb,var(--bg) 40%,transparent);color:var(--bg);border-radius:99px;padding:3px 10px;cursor:pointer;font-size:12.5px}
+
+/* cards */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g-7-5{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);min-width:0}
+.card>h2,.card>h3,.cardhead{margin-bottom:12px}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cardhead h2,.cardhead h3{margin:0}
+.kpi{padding:16px 18px}
+.kpi .label{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.kpi .val{font-family:var(--serif);font-size:28px;margin-top:4px;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.kpi.good{background:var(--good-soft);border-color:color-mix(in srgb,var(--good) 25%,var(--line))}
+.kpi.acc{background:var(--acc-soft);border-color:color-mix(in srgb,var(--acc) 25%,var(--line))}
+.kpi.warn{background:var(--warn-soft)}
+.kpi.bad{background:var(--bad-soft)}
+.hero-safe{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.hero-safe .big{font-family:var(--serif);font-size:46px;line-height:1;font-variant-numeric:tabular-nums}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+
+/* buttons & forms */
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:8px 15px;cursor:pointer;font-size:14px;font-weight:500;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.sm{padding:5px 11px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--bad)}
+.btn svg{width:16px;height:16px}
+.link{background:none;border:0;padding:2px 4px;color:var(--muted);cursor:pointer;font-size:13px}
+.link:hover{color:var(--acc-ink);text-decoration:underline}
+.link.del:hover{color:var(--bad)}
+label.f{display:block;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+label.f>span{display:block;margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],input[type=search],select,textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 11px;font-size:15px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+textarea{resize:vertical;min-height:70px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>.grow{flex:1}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:inline-flex;background:var(--soft);border-radius:99px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:99px;padding:6px 13px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+.seg button.on{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.months{display:flex;gap:6px;flex-wrap:wrap}
+.months button{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:5px 11px;font-size:13px;cursor:pointer}
+.months button.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.months button.now:not(.on){border-color:var(--acc)}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .grow{flex:1;min-width:0}
+.li .t{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li .s{font-size:12.5px;color:var(--muted)}
+.li .amt{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.chk{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--muted);display:grid;place-items:center;cursor:pointer;flex:none;background:transparent;padding:0}
+.chk.on{background:var(--good);border-color:var(--good);color:#fff}
+.chk svg{width:14px;height:14px}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--soft);white-space:nowrap}
+.pill-ns{background:var(--soft);color:var(--muted)}
+.pill-ip{background:var(--warn-soft);color:var(--warn)}
+.pill-dn{background:var(--good-soft);color:var(--good)}
+.pill{cursor:pointer;border:0}
+.date{font-size:12.5px;color:var(--muted);width:58px;flex:none}
+.empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:14px}
+.empty b{display:block;color:var(--ink);font-family:var(--serif);font-size:17px;margin-bottom:4px}
+
+/* bars */
+.bar{height:10px;background:var(--soft);border-radius:99px;overflow:hidden;position:relative}
+.bar>i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.bar.thick{height:14px}
+.stack{display:flex;height:16px;border-radius:99px;overflow:hidden;background:var(--soft)}
+.stack>i{height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.bva .li{display:grid;grid-template-columns:150px 1fr 150px;gap:12px}
+.bva .li .bar{height:12px}
+.bva .over>i{background:var(--bad)}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-weight:600;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 8px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+.tbl input{padding:6px 9px;font-size:14px}
+.tblwrap{overflow-x:auto}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cal .dow{font-size:12px;color:var(--muted);text-align:center;padding-bottom:2px}
+.cal .day{min-height:84px;border:1px solid var(--line);border-radius:12px;padding:6px 7px;background:var(--panel);cursor:pointer;display:flex;flex-direction:column;gap:3px;text-align:left;font-size:12px;overflow:hidden}
+.cal .day:hover{border-color:var(--acc)}
+.cal .day.blank{background:transparent;border-style:dashed;opacity:.35;cursor:default}
+.cal .day.today{border:2px solid var(--acc)}
+.cal .day .n{font-weight:600;font-size:13px}
+.cal .ev{display:flex;align-items:center;gap:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;line-height:1.25}
+.cal .ev.paid{opacity:.5;text-decoration:line-through}
+.cal .more{font-size:11px;color:var(--muted)}
+
+/* donut */
+.donutwrap{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center}
+.donut text{font-family:var(--serif);fill:var(--ink)}
+
+/* steps */
+.steps .li{gap:14px}
+.stepn{width:30px;height:30px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.stepn.done{background:var(--good);color:#fff}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(15,20,18,.42);display:grid;place-items:center;padding:16px;z-index:50;animation:fade .15s}
+.modal{background:var(--panel);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(480px,100%);max-height:92vh;overflow:auto;padding:22px}
+.modal h2{margin-bottom:14px}
+.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+@keyframes fade{from{opacity:0}}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:14px;z-index:60;box-shadow:var(--shadow);animation:fade .2s}
+.fab{display:none}
+.mcat{display:none}
+.li .s:empty{display:none}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatches button{width:34px;height:34px;border-radius:50%;border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.swatches button.on{box-shadow:0 0 0 2px var(--ink)}
+.callout{background:var(--acc-soft);border-radius:14px;padding:14px 16px;font-size:14px}
+.callout.warn{background:var(--warn-soft)}
+.afford-res{margin-top:10px;font-size:14px;border-radius:12px;padding:10px 12px}
+.ns-days{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.ns-days i{width:16px;height:16px;border-radius:5px;background:var(--soft);display:block}
+.ns-days i.on{background:var(--good)}
+.ns-days i.td{outline:2px solid var(--acc);outline-offset:1px}
+
+@media (max-width:1050px){
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g-7-5,.g3{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .shell{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:270px;z-index:40;transform:translateX(-102%);transition:transform .2s;box-shadow:var(--shadow)}
+  .shell.open .side{transform:none}
+  .shell.open::after{content:"";position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:30}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:20}
+  .top b{font-family:var(--serif);font-size:17px}
+  .main{padding:18px 16px 100px}
+  h1{font-size:25px}
+  .g2{grid-template-columns:1fr}
+  .donutwrap{grid-template-columns:1fr;justify-items:center}
+  .bva .li{grid-template-columns:1fr 110px;row-gap:6px}
+  .bva .li .bar{grid-column:1/-1;grid-row:2}
+  .cal{gap:3px}
+  .cal .day{min-height:58px;padding:4px;border-radius:9px}
+  .cal .ev span.lbl{display:none}
+  .cal .ev{gap:0}
+  .fab{display:inline-flex;position:fixed;right:18px;bottom:20px;z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:13px 20px;font-size:15px}
+  .hero-safe .big{font-size:38px}
+  .frow{grid-template-columns:1fr}
+  .months{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}
+  .months::-webkit-scrollbar{display:none}
+  .li{gap:9px}
+  .li>.dot,.li .cattag,.li .rep{display:none}
+  .mcat{display:inline}
+  .li .date{width:46px}
+  .li .t{font-size:14.5px}
+  .demo-bar{font-size:12.5px;padding:7px 12px}
+}
+@media (max-width:460px){.g4{grid-template-columns:1fr 1fr}.kpi .val{font-size:22px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{.side,.top,.fab,.demo-bar{display:none!important}.shell{display:block}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;font-family:sans-serif">Clear Cents needs JavaScript turned on to run.</p></noscript>
+<script>(() => {
+'use strict';
+const MODE = document.documentElement.dataset.mode || 'app'; // demo | app | offline
+const KEY = 'clearcents:' + (MODE === 'demo' ? 'demo' : 'main') + ':v1';
+const ETSY = 'https://www.etsy.com/shop/worldtradenet';
+
+/* ---------- helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const pad = n => String(n).padStart(2, '0');
+const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => iso(new Date());
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d || 1); };
+const ymOf = s => s.slice(0, 7);
+const thisYM = () => today().slice(0, 7);
+const daysIn = ym => { const [y, m] = ym.split('-').map(Number); return new Date(y, m, 0).getDate(); };
+const addMonths = (ym, n) => { const d = parse(ym + '-01'); d.setMonth(d.getMonth() + n); return iso(d).slice(0, 7); };
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MON = MONTHS.map(m => m.slice(0, 3));
+const monthName = ym => MONTHS[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
+const shortDate = s => MON[+s.slice(5, 7) - 1] + ' ' + (+s.slice(8, 10));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sum = (a, f = x => x) => a.reduce((t, x) => t + (+f(x) || 0), 0);
+const num = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : 0; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+const CURRENCIES = [['USD','US Dollar'],['GBP','British Pound'],['EUR','Euro'],['CAD','Canadian Dollar'],['AUD','Australian Dollar'],['NZD','New Zealand Dollar'],['INR','Indian Rupee'],['PKR','Pakistani Rupee'],['AED','UAE Dirham'],['SGD','Singapore Dollar'],['ZAR','South African Rand'],['JPY','Japanese Yen'],['MXN','Mexican Peso'],['PHP','Philippine Peso'],['NGN','Nigerian Naira']];
+const ACCENTS = [['Sage','#3f7d6e'],['Lavender','#7a68b8'],['Clay','#b8673f'],['Ocean','#2f6f9f'],['Rose','#b8506e'],['Forest','#3e7a3a'],['Charcoal','#4a5560']];
+const PALETTE = ['#3f7d6e','#d08a3c','#6f8fc8','#c25d6e','#8a6fbf','#5aa07a','#d4b04a','#4fa3a6','#b47a5a','#7c8a95','#e07a5f','#9bb06a','#a55b9c','#5f7fa8','#c99a6b'];
+
+let fmtCache = {};
+const money = (v, opt = {}) => {
+  const c = S.settings.currency;
+  const k = c + (opt.round ? 'r' : '');
+  if (!fmtCache[k]) {
+    try { fmtCache[k] = new Intl.NumberFormat(undefined, { style: 'currency', currency: c, maximumFractionDigits: opt.round ? 0 : 2, minimumFractionDigits: opt.round ? 0 : 2 }); }
+    catch { fmtCache[k] = { format: n => c + ' ' + n.toFixed(2) }; }
+  }
+  return fmtCache[k].format(v || 0);
+};
+
+/* ---------- icons ---------- */
+const P = {
+  today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  pay:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+  env:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  save:'<path d="M19 9c0-3-3-5-7-5S4 6 4 10c0 2 1 3.5 2.5 4.5L6 18h3l.5-1.5h4L14 18h3l.5-3c1-.5 2-1.5 2-3h1.5V9z"/><path d="M15 9h.01"/>',
+  debt:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+  goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+  year:'<path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  start:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  check:'<path d="M20 6L9 17l-5-5"/>',
+  menu:'<path d="M3 6h18M3 12h18M3 18h18"/>',
+  left:'<path d="M15 18l-6-6 6-6"/>', right:'<path d="M9 18l6-6-6-6"/>',
+  dl:'<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>', up:'<path d="M12 21V9M7 14l5-5 5 5M5 3h14"/>',
+};
+const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+
+/* ---------- state ---------- */
+const DEFAULT_CATS = [
+  ['Rent / Mortgage','needs',1450],['Utilities','needs',180],['Groceries','needs',450],['Transportation','needs',140],['Insurance','needs',120],['Phone & Internet','needs',105],
+  ['Dining Out','wants',160],['Coffee','wants',40],['Shopping & Clothing','wants',90],['Entertainment','wants',60],['Subscriptions','wants',45],['Personal Care','wants',50],['Health & Fitness','wants',45],['Gifts','wants',40],['Miscellaneous','wants',40]
+];
+function blankState() {
+  return {
+    v: 1,
+    settings: { name: '', currency: 'USD', theme: 'auto', accent: '#3f7d6e', created: today() },
+    categories: DEFAULT_CATS.map(([name, group, budget], i) => ({ id: 'c' + i, name, group, budget, color: PALETTE[i % PALETTE.length] })),
+    months: {}, tx: [], events: [], funds: [], debts: [], goals: [], nospend: {},
+    debtPlan: { strategy: 'avalanche', extra: 0 },
+  };
+}
+let S;
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { S = Object.assign(blankState(), JSON.parse(raw)); return; } } catch (e) {}
+  S = MODE === 'demo' ? sampleState() : blankState();
+  save();
+}
+let saveT;
+function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Could not save — browser storage is full or blocked'); } }, 60); }
+const cat = id => S.categories.find(c => c.id === id);
+const fund = id => S.funds.find(f => f.id === id);
+const debt = id => S.debts.find(d => d.id === id);
+
+/* ---------- sample data (demo) ---------- */
+function sampleState() {
+  const s = blankState();
+  s.settings.name = 'Jordan';
+  const now = new Date(); const Y = now.getFullYear(); const curM = now.getMonth();
+  let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const C = n => s.categories.find(c => c.name === n).id;
+  s.funds = [
+    { id: 'f1', name: 'Emergency fund', saved: 2400, target: 6000, date: (Y + 1) + '-06-30', color: '#3f7d6e' },
+    { id: 'f2', name: 'Lisbon trip', saved: 1250, target: 3000, date: (Y + 1) + '-05-01', color: '#d08a3c' },
+    { id: 'f3', name: 'New laptop', saved: 640, target: 1400, date: '', color: '#6f8fc8' },
+  ];
+  s.debts = [
+    { id: 'd1', name: 'Visa credit card', balance: 3200, original: 4200, apr: 22.9, min: 150, color: '#c25d6e' },
+    { id: 'd2', name: 'Car loan', balance: 12800, original: 18000, apr: 6.5, min: 310, color: '#8a6fbf' },
+    { id: 'd3', name: 'Student loan', balance: 9400, original: 15000, apr: 4.5, min: 120, color: '#5aa07a' },
+  ];
+  s.debtPlan = { strategy: 'avalanche', extra: 100 };
+  s.goals = [
+    { id: 'g1', title: 'Pay off the Visa card', status: 'ip', date: Y + '-12-31', note: 'Extra $100 a month on top of the minimum.' },
+    { id: 'g2', title: 'Build a 3-month emergency fund', status: 'ip', date: (Y + 1) + '-06-30', note: '' },
+    { id: 'g3', title: 'Take the Lisbon trip — paid in cash', status: 'ip', date: (Y + 1) + '-05-01', note: 'Flights booked, saving for the rest.' },
+    { id: 'g4', title: 'Start investing 10% of income', status: 'ns', date: (Y + 1) + '-01-01', note: '' },
+    { id: 'g5', title: 'Cancel unused subscriptions', status: 'dn', date: Y + '-03-01', note: 'Saved $34 a month.' },
+  ];
+  const ev = (title, kind, day, amount, repeat, extra = {}) => s.events.push(Object.assign({ id: uid(), title, kind, date: Y + '-01-' + pad(day), amount, repeat, paid: {} }, extra));
+  ev('Paycheck', 'payday', 1, 2100, 'monthly');
+  ev('Paycheck', 'payday', 15, 2100, 'monthly');
+  ev('Rent', 'bill', 1, 1450, 'monthly', { catId: C('Rent / Mortgage') });
+  ev('Electric & water', 'bill', 8, 120, 'monthly', { catId: C('Utilities') });
+  ev('Internet', 'bill', 12, 60, 'monthly', { catId: C('Phone & Internet') });
+  ev('Phone bill', 'bill', 18, 45, 'monthly', { catId: C('Phone & Internet') });
+  ev('Car insurance', 'bill', 22, 120, 'monthly', { catId: C('Insurance') });
+  ev('Streaming', 'bill', 20, 18, 'monthly', { catId: C('Subscriptions') });
+  ev('Gym membership', 'bill', 25, 45, 'monthly', { catId: C('Health & Fitness') });
+  ev('Visa payment', 'bill', 16, 250, 'monthly', { debtId: 'd1' });
+  ev('Car loan payment', 'bill', 5, 310, 'monthly', { debtId: 'd2' });
+  ev('Student loan', 'bill', 28, 120, 'monthly', { debtId: 'd3' });
+  ev('Emergency fund transfer', 'transfer', 16, 200, 'monthly', { fundId: 'f1' });
+  ev('Lisbon trip transfer', 'transfer', 16, 150, 'monthly', { fundId: 'f2' });
+  ev('Car registration renewal', 'note', 18, 0, 'none', { date: Y + '-' + pad(curM + 1) + '-18' });
+
+  const shops = { 'Groceries': ['Trader Joe\'s', 'Whole Foods', 'Costco run', 'Farmers market', 'Aldi'], 'Dining Out': ['Tacos with friends', 'Date night', 'Pizza night', 'Sushi lunch'], 'Coffee': ['Corner cafe', 'Latte', 'Coffee beans'], 'Transportation': ['Gas', 'Rideshare', 'Parking'], 'Shopping & Clothing': ['New sneakers', 'Target run', 'Jacket'], 'Entertainment': ['Movie night', 'Concert tickets', 'Bowling'], 'Personal Care': ['Haircut', 'Skincare'], 'Gifts': ['Birthday gift'], 'Miscellaneous': ['Hardware store', 'Post office'] };
+  const freq = { 'Groceries': [4, 40, 95], 'Dining Out': [2.5, 18, 55], 'Coffee': [5, 5, 9], 'Transportation': [3, 18, 50], 'Shopping & Clothing': [1, 25, 85], 'Entertainment': [1, 15, 45], 'Personal Care': [1, 20, 45], 'Gifts': [0.4, 25, 60], 'Miscellaneous': [1, 8, 35] };
+  for (let m = 0; m <= curM; m++) {
+    const ym = Y + '-' + pad(m + 1); const lastDay = m === curM ? now.getDate() : daysIn(ym);
+    s.months[ym] = { incomePlan: 4200, budgets: {}, note: '' };
+    for (const [name, [n, lo, hi]] of Object.entries(freq)) {
+      const count = Math.floor(n + rnd() * 1.4);
+      for (let i = 0; i < count; i++) {
+        const day = 1 + Math.floor(rnd() * lastDay);
+        const list = shops[name];
+        s.tx.push({ id: uid(), date: ym + '-' + pad(day), type: 'expense', catId: C(name), name: list[Math.floor(rnd() * list.length)], amount: Math.round((lo + rnd() * (hi - lo)) * 100) / 100, note: '' });
+      }
+    }
+    // mark recurring events as paid up to today (creates linked transactions)
+    for (const e of s.events) for (const d of occurrences(e, ym)) if (d <= today() && e.kind !== 'note') markPaid(e, d, true, s, true);
+    for (let d = 1; d <= lastDay; d++) if (rnd() < 0.22) s.nospend[ym + '-' + pad(d)] = true;
+  }
+  s.funds.forEach((f, i) => f.saved = [2400, 1250, 640][i]);
+  s.debts.forEach((d, i) => d.balance = [3200, 12800, 9400][i]);
+  s.months[thisYM()].note = 'Cutting back on takeout this month — putting the difference toward the Visa card.';
+  return s;
+}
+
+/* ---------- calendar engine ---------- */
+function occurrences(e, ym) {
+  const out = []; const start = e.date; const last = ym + '-' + pad(daysIn(ym));
+  if (start > last) return out;
+  if (e.until && e.until < ym + '-01') return out;
+  const add = d => { if (ymOf(d) === ym && d >= start && (!e.until || d <= e.until)) out.push(d); };
+  if (e.repeat === 'monthly') { const day = Math.min(+start.slice(8, 10), daysIn(ym)); add(ym + '-' + pad(day)); }
+  else if (e.repeat === 'weekly' || e.repeat === 'biweekly') {
+    const step = e.repeat === 'weekly' ? 7 : 14; const d0 = parse(start); const first = parse(ym + '-01');
+    let k = Math.max(0, Math.floor((first - d0) / 864e5 / step) - 1); let d = new Date(d0); d.setDate(d0.getDate() + k * step);
+    while (iso(d) <= last) { add(iso(d)); d.setDate(d.getDate() + step); }
+  } else if (e.repeat === 'yearly') { if (start.slice(5, 7) === ym.slice(5, 7)) add(ym + start.slice(7)); }
+  else add(start);
+  return out;
+}
+function monthEvents(ym) {
+  const list = [];
+  for (const e of S.events) for (const d of occurrences(e, ym)) list.push({ e, date: d, paid: !!e.paid[d] });
+  return list.sort((a, b) => a.date.localeCompare(b.date) || (a.e.kind === 'payday' ? -1 : 1));
+}
+function markPaid(e, d, on, st = S, silent) {
+  e.paid = e.paid || {};
+  const src = e.id + '@' + d;
+  if (on) {
+    e.paid[d] = true;
+    if (e.kind === 'note' || !e.amount) return;
+    if (st.tx.some(t => t.src === src)) return;
+    const t = { id: uid(), date: d, name: e.title, amount: +e.amount, note: '', src };
+    if (e.kind === 'payday') t.type = 'income';
+    else if (e.fundId) { t.type = 'saving'; t.fundId = e.fundId; const f = st.funds.find(x => x.id === e.fundId); if (f) f.saved += +e.amount; }
+    else if (e.debtId) { t.type = 'debt'; t.debtId = e.debtId; const db = st.debts.find(x => x.id === e.debtId); if (db) db.balance = Math.max(0, db.balance - e.amount); }
+    else { t.type = 'expense'; t.catId = e.catId || (st.categories.find(c => c.name === 'Miscellaneous') || st.categories[0]).id; }
+    if (!silent || d <= today()) st.tx.push(t);
+  } else {
+    delete e.paid[d];
+    const t = st.tx.find(x => x.src === src); if (t) removeTx(t, st);
+  }
+}
+function applyTx(t, dir, st = S) {
+  if (t.type === 'saving') { const f = st.funds.find(x => x.id === t.fundId); if (f) f.saved = Math.max(0, f.saved + dir * t.amount); }
+  if (t.type === 'debt') { const d = st.debts.find(x => x.id === t.debtId); if (d) d.balance = Math.max(0, d.balance - dir * t.amount); }
+}
+function removeTx(t, st = S) { applyTx(t, -1, st); st.tx = st.tx.filter(x => x !== t); if (t.src) { const [eid, d] = t.src.split('@'); const e = st.events.find(x => x.id === eid); if (e) delete e.paid[d]; } }
+
+/* ---------- money math ---------- */
+function monthData(ym) {
+  const m = S.months[ym] || {};
+  const txs = S.tx.filter(t => ymOf(t.date) === ym);
+  const received = sum(txs.filter(t => t.type === 'income'), t => t.amount);
+  const evs = monthEvents(ym);
+  const paydayExpected = sum(evs.filter(x => x.e.kind === 'payday'), x => x.e.amount);
+  const planned = m.incomePlan || paydayExpected;
+  const unpaidPaydays = sum(evs.filter(x => x.e.kind === 'payday' && !x.paid), x => x.e.amount);
+  const income = Math.max(planned, received + unpaidPaydays, received);
+  const expense = sum(txs.filter(t => t.type === 'expense'), t => t.amount);
+  const saving = sum(txs.filter(t => t.type === 'saving'), t => t.amount);
+  const debtPaid = sum(txs.filter(t => t.type === 'debt'), t => t.amount);
+  const spent = expense + saving + debtPaid;
+  const upcoming = evs.filter(x => !x.paid && x.e.kind !== 'payday' && x.e.kind !== 'note' && x.e.amount > 0);
+  const upcomingTotal = sum(upcoming, x => x.e.amount);
+  const safe = income - spent - upcomingTotal;
+  const byCat = {};
+  for (const t of txs) if (t.type === 'expense') byCat[t.catId] = (byCat[t.catId] || 0) + t.amount;
+  const budgets = {}; for (const c of S.categories) budgets[c.id] = (m.budgets && m.budgets[c.id] != null) ? m.budgets[c.id] : c.budget;
+  const isCur = ym === thisYM(); const daysLeft = isCur ? daysIn(ym) - new Date().getDate() + 1 : (ym > thisYM() ? daysIn(ym) : 0);
+  return { ym, txs, received, planned, income, expense, saving, debtPaid, spent, upcoming, upcomingTotal, safe, byCat, budgets, daysLeft, perDay: daysLeft ? safe / daysLeft : 0, evs };
+}
+function simulate(strategy, extra, rollover = true) {
+  const ds = S.debts.filter(d => d.balance > 0).map(d => ({ id: d.id, bal: +d.balance, apr: +d.apr, min: +d.min, paidOff: null, interest: 0 }));
+  const totalMin = sum(ds, d => d.min); let month = 0, totalInt = 0;
+  const order = () => ds.filter(d => d.bal > 0.005).sort(strategy === 'snowball' ? (a, b) => a.bal - b.bal : (a, b) => b.apr - a.apr || a.bal - b.bal);
+  while (ds.some(d => d.bal > 0.005) && month < 600) {
+    month++;
+    for (const d of ds) if (d.bal > 0.005) { const i = d.bal * d.apr / 1200; d.bal += i; d.interest += i; totalInt += i; }
+    let budget = rollover ? totalMin + extra : 0;
+    for (const d of ds) if (d.bal > 0.005) { const p = Math.min(d.min, d.bal); d.bal -= p; if (rollover) budget -= p; }
+    if (rollover) for (const d of order()) { if (budget <= 0) break; const p = Math.min(budget, d.bal); d.bal -= p; budget -= p; }
+    for (const d of ds) if (d.bal <= 0.005 && d.paidOff == null) { d.bal = 0; d.paidOff = month; }
+  }
+  return { months: month, stuck: month >= 600, totalInt, ds };
+}
+function streak() { let n = 0; const d = new Date(); if (!S.nospend[iso(d)]) d.setDate(d.getDate() - 1); while (S.nospend[iso(d)]) { n++; d.setDate(d.getDate() - 1); } return n; }
+
+/* ---------- charts ---------- */
+function donut(parts, center, sub) {
+  const total = sum(parts, p => p.v); const R = 80, r = 54, cx = 100, cy = 100; let a = -Math.PI / 2; let out = '';
+  if (!total) out = `<circle cx="${cx}" cy="${cy}" r="${(R + r) / 2}" fill="none" stroke="var(--soft)" stroke-width="${R - r}"/>`;
+  for (const p of parts) {
+    if (!p.v) continue; const frac = p.v / total; const a2 = a + frac * Math.PI * 2 - (frac < 1 ? 0.012 : 0);
+    if (frac >= 0.999) { out += `<circle cx="${cx}" cy="${cy}" r="${(R + r) / 2}" fill="none" stroke="${p.c}" stroke-width="${R - r}"/>`; break; }
+    const large = a2 - a > Math.PI ? 1 : 0; const pt = (rad, ang) => [cx + rad * Math.cos(ang), cy + rad * Math.sin(ang)].map(n => n.toFixed(2)).join(' ');
+    out += `<path d="M${pt(R, a)} A${R} ${R} 0 ${large} 1 ${pt(R, a2)} L${pt(r, a2)} A${r} ${r} 0 ${large} 0 ${pt(r, a)}Z" fill="${p.c}"><title>${esc(p.l)}: ${money(p.v)}</title></path>`;
+    a += frac * Math.PI * 2;
+  }
+  return `<svg class="donut" viewBox="0 0 200 200" width="190" height="190" role="img">${out}<text x="100" y="98" text-anchor="middle" font-size="19">${esc(center)}</text><text x="100" y="118" text-anchor="middle" font-size="11" style="font-family:var(--sans);fill:var(--muted)">${esc(sub)}</text></svg>`;
+}
+function columns(rows, keys, h = 190) {
+  const max = Math.max(1, ...rows.flatMap(r => keys.map(k => r[k.k]))); const W = 640, pad = 34, bw = (W - pad) / rows.length;
+  let g = ''; for (let i = 0; i <= 3; i++) { const y = 10 + (h - 30) * i / 3; g += `<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pad - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${money(max * (1 - i / 3), { round: true }).replace(/\.00$/, '')}</text>`; }
+  rows.forEach((r, i) => {
+    const inner = bw * 0.7 / keys.length; keys.forEach((k, j) => {
+      const v = r[k.k]; const bh = (h - 30) * v / max; const x = pad + i * bw + bw * 0.15 + j * inner;
+      g += `<rect x="${x.toFixed(1)}" y="${(10 + h - 30 - bh).toFixed(1)}" width="${(inner - 2).toFixed(1)}" height="${Math.max(0, bh).toFixed(1)}" rx="3" fill="${k.c}"><title>${r.l} · ${k.l}: ${money(v)}</title></rect>`;
+    });
+    g += `<text x="${(pad + i * bw + bw / 2).toFixed(1)}" y="${h - 4}" text-anchor="middle" font-size="11" fill="var(--muted)">${r.l}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${h}" width="100%" style="font-family:var(--sans);display:block">${g}</svg><div class="legend">${keys.map(k => `<span><i class="dot" style="background:${k.c}"></i>${k.l}</span>`).join('')}</div>`;
+}
+const bar = (pct, color, cls = '') => `<div class="bar ${cls}"><i style="width:${clamp(pct, 0, 100).toFixed(1)}%;${color ? 'background:' + color : ''}"></i></div>`;
+
+/* ---------- UI state ---------- */
+let view = 'today', viewYM = thisYM(), calYM = thisYM(), txFilter = { q: '', type: 'all', cat: 'all' };
+const NAV = [
+  ['today', 'Today', 'today'], ['month', 'Month', 'home'], ['spending', 'Spending log', 'list'], ['calendar', 'Calendar', 'cal'], ['paychecks', 'Paycheck plan', 'pay'], ['budget', 'Budget', 'env'],
+  '-', ['savings', 'Savings', 'save'], ['debt', 'Debt payoff', 'debt'], ['goals', 'Goals', 'goal'], ['year', 'Year review', 'year'], '-', ['start', 'Start here', 'start'], ['settings', 'Settings', 'gear'],
+];
+function shell() {
+  const demo = MODE === 'demo' ? `<div class="demo-bar"><span>✨ You're trying the <b>live demo</b> with sample data — everything you change stays in this browser.</span><a href="${ETSY}" target="_blank" rel="noopener">Get the full planner →</a><button data-act="demo-reset">Reset demo</button></div>` : '';
+  document.body.innerHTML = `${demo}<div class="shell" id="shell">
+  <aside class="side"><div class="brand"><div class="logo">C</div><div><b>Clear Cents</b><span id="who"></span></div></div>
+    <button class="btn pri logbtn" data-act="log">${ic('plus')} Log spending</button>
+    <nav class="nav">${NAV.map(n => n === '-' ? '<div class="sep"></div>' : `<a href="#${n[0]}" data-view="${n[0]}">${ic(n[2])}${n[1]}</a>`).join('')}</nav>
+    <div class="side-foot">Saved on this device only.<br>No bank connection — ever.</div></aside>
+  <div><div class="top"><button class="btn ghost" data-act="menu" aria-label="Menu">${ic('menu')}</button><b>Clear Cents</b><button class="btn ghost" data-act="theme" aria-label="Theme">◐</button></div>
+  <main class="main" id="main"></main></div>
+  <button class="btn pri fab" data-act="log">${ic('plus')} Log</button></div>`;
+}
+function applyTheme() {
+  const t = S.settings.theme; const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.style.setProperty('--acc', S.settings.accent || '#3f7d6e');
+  const mt = document.querySelector('meta[name=theme-color]'); if (mt) mt.content = dark ? '#121816' : '#f5f1ea';
+}
+function render() {
+  applyTheme();
+  $('#who').textContent = S.settings.name ? S.settings.name + '’s money plan' : 'ADHD budget planner';
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('on', a.dataset.view === view));
+  $('#shell').classList.remove('open');
+  const fn = VIEWS[view] || VIEWS.today; $('#main').innerHTML = fn();
+  const afterFn = AFTER[view]; if (afterFn) afterFn();
+}
+function go(v) { view = v; if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v); render(); window.scrollTo(0, 0); }
+const head = (title, sub, right = '') => `<div class="pagehead"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div><div class="row">${right}</div></div>`;
+const monthPicker = (ym, act) => { const y = ym.slice(0, 4); return `<div class="row" style="margin-bottom:16px"><button class="btn sm ghost" data-act="${act}" data-v="${addMonths(ym, -1)}">${ic('left')}</button><div class="months">${MON.map((m, i) => { const v = y + '-' + pad(i + 1); return `<button class="${v === ym ? 'on' : ''} ${v === thisYM() ? 'now' : ''}" data-act="${act}" data-v="${v}">${m}</button>`; }).join('')}</div><button class="btn sm ghost" data-act="${act}" data-v="${addMonths(ym, 1)}">${ic('right')}</button><span class="muted small">${y}</span></div>`; };
+const empty = (t, s, btn = '') => `<div class="empty"><b>${t}</b>${s}${btn ? `<div style="margin-top:12px">${btn}</div>` : ''}</div>`;
+const statusPill = s => ({ ns: '<span class="tag pill-ns">Not started</span>', ip: '<span class="tag pill-ip">In progress</span>', dn: '<span class="tag pill-dn">Done</span>' })[s];
+const kindDot = e => e.kind === 'payday' ? 'var(--good)' : e.kind === 'transfer' ? '#6f8fc8' : e.kind === 'note' ? 'var(--muted)' : 'var(--bad)';
+function eventRow(x, showDate = true) {
+  const e = x.e; const sign = e.kind === 'payday' ? '+' : '';
+  const late = !x.paid && x.date < today() && e.kind !== 'note';
+  return `<div class="li">${e.kind === 'note' ? '<span style="width:22px"></span>' : `<button class="chk ${x.paid ? 'on' : ''}" data-act="paid" data-id="${e.id}" data-d="${x.date}" title="Mark ${e.kind === 'payday' ? 'received' : 'paid'}">${x.paid ? ic('check') : ''}</button>`}
+    ${showDate ? `<span class="date">${x.date === today() ? 'Today' : shortDate(x.date)}</span>` : ''}<i class="dot" style="background:${kindDot(e)}"></i>
+    <div class="grow"><div class="t">${esc(e.title)}</div><div class="s">${e.kind === 'payday' ? 'Payday' : e.kind === 'transfer' ? 'Savings transfer' : e.kind === 'note' ? 'Reminder' : 'Bill'}${e.repeat !== 'none' ? '<span class="rep"> · repeats ' + e.repeat + '</span>' : ''}${late ? ' · <b style="color:var(--bad)">overdue</b>' : ''}</div></div>
+    ${e.amount ? `<span class="amt ${e.kind === 'payday' ? 'pos' : ''}">${sign}${money(e.amount)}</span>` : ''}<button class="link" data-act="event" data-id="${e.id}">Edit</button></div>`;
+}
+function txRow(t) {
+  const c = t.type === 'expense' ? cat(t.catId) : null; const label = t.type === 'income' ? 'Income' : t.type === 'saving' ? (fund(t.fundId)?.name || 'Savings') : t.type === 'debt' ? (debt(t.debtId)?.name || 'Debt') : (c?.name || 'Uncategorized');
+  const color = t.type === 'income' ? 'var(--good)' : t.type === 'saving' ? (fund(t.fundId)?.color || '#6f8fc8') : t.type === 'debt' ? (debt(t.debtId)?.color || 'var(--bad)') : (c?.color || 'var(--muted)');
+  return `<div class="li"><span class="date">${shortDate(t.date)}</span><span class="tag cattag" style="background:color-mix(in srgb,${color} 16%,var(--panel));color:color-mix(in srgb,${color} 80%,var(--ink))">${esc(label)}</span><div class="grow"><div class="t">${esc(t.name || label)}</div><div class="s"><span class="mcat"><i class="dot" style="background:${color};width:7px;height:7px"></i> ${esc(label)}${t.note ? ' · ' : ''}</span>${esc(t.note)}</div></div><span class="amt ${t.type === 'income' ? 'pos' : ''}">${t.type === 'income' ? '+' : ''}${money(t.amount)}</span><button class="link" data-act="tx" data-id="${t.id}">Edit</button></div>`;
+}
+
+/* ---------- views ---------- */
+const VIEWS = {};
+const AFTER = {};
+VIEWS.today = () => {
+  const md = monthData(thisYM()); const nm = S.settings.name;
+  const fundsSaved = sum(S.funds, f => f.saved), fundsTarget = sum(S.funds, f => f.target);
+  const owed = sum(S.debts, d => d.balance); const mins = sum(S.debts, d => d.min);
+  const next = md.evs.filter(x => !x.paid && x.e.kind !== 'note' && x.date >= today()).slice(0, 6);
+  const overdue = md.evs.filter(x => !x.paid && x.e.kind !== 'note' && x.date < today());
+  const recent = S.tx.filter(t => t.date <= today()).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const goals = S.goals.filter(g => g.status === 'ip');
+  const h = new Date().getHours(); const hi = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  const ym = thisYM(); const dim = daysIn(ym); const tdNum = new Date().getDate();
+  const nsCount = Object.keys(S.nospend).filter(k => ymOf(k) === ym).length;
+  const lateBill = overdue.find(x => x.e.kind !== 'payday'), latePay = overdue.find(x => x.e.kind === 'payday');
+  const onething = lateBill ? `Pay <b>${esc(lateBill.e.title)}</b> (${money(lateBill.e.amount)}) — it was due ${shortDate(lateBill.date)}.` : latePay ? `Did <b>${esc(latePay.e.title)}</b> arrive on ${shortDate(latePay.date)}? Tick it off so your numbers stay right.` : next[0] ?  `Next up: <b>${esc(next[0].e.title)}</b> on ${next[0].date === today() ? 'today' : shortDate(next[0].date)}.` : !md.txs.length ? 'Log one purchase today — that’s the whole job.' : 'You’re all caught up. Enjoy your day.';
+  return head(`${hi}${nm ? ', ' + esc(nm) : ''}`, 'Here’s the shape of your money today — just the things that matter.', `<button class="btn" data-act="go" data-v="calendar">${ic('cal')} Calendar</button>`) +
+  `<div class="card" style="margin-bottom:16px"><div class="hero-safe"><div><div class="muted small">${MONTHS[new Date().getMonth()]} safe to spend</div><div class="big ${md.safe < 0 ? 'neg' : ''}">${money(md.safe)}</div><div class="muted small" style="margin-top:6px">after bills still due this month</div></div>
+   <div style="flex:1;min-width:240px"><div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="small"><b class="money" style="font-size:20px">${money(Math.max(0, md.perDay))}</b> <span class="muted">per day for the next ${md.daysLeft} day${md.daysLeft === 1 ? '' : 's'}</span></span></div>
+   ${spendStack(md)}<div class="callout" style="margin-top:14px">🎯 <b>One thing:</b> ${onething}</div></div></div></div>
+  <div class="grid g4" style="margin-bottom:16px">
+   <div class="card kpi acc"><div class="label">Saved across every fund</div><div class="val">${money(fundsSaved)}</div><div class="sub">toward ${money(fundsTarget, { round: true })} · ${S.funds.length} funds</div></div>
+   <div class="card kpi"><div class="label">Still owed</div><div class="val">${money(owed)}</div><div class="sub">${S.debts.length} debts · ${money(mins)}/mo minimums</div></div>
+   <div class="card kpi good"><div class="label">Income this month</div><div class="val">${money(md.income)}</div><div class="sub">${money(md.received)} received so far</div></div>
+   <div class="card kpi"><div class="label">No-spend days</div><div class="val">${nsCount}</div><div class="sub">${streak() ? '🔥 ' + streak() + ' day streak' : 'start a streak today'}</div></div></div>
+  <div class="grid g-7-5"><div class="grid" style="align-content:start">
+   <div class="card"><div class="cardhead"><h2>Coming up</h2><button class="btn sm" data-act="event">${ic('plus')} Add</button></div>
+    ${overdue.length ? `<div class="callout warn small" style="margin-bottom:8px">${overdue.length} item${overdue.length > 1 ? 's' : ''} past due — tick ${overdue.length > 1 ? 'them' : 'it'} off once ${overdue.every(x => x.e.kind === 'payday') ? 'received' : 'done'}.</div>` + overdue.map(x => eventRow(x)).join('') : ''}
+    ${next.length ? '<div class="list">' + next.map(x => eventRow(x)).join('') + '</div>' : (overdue.length ? '' : empty('Nothing due', 'Add bills and paydays on the calendar and they’ll show up here.', `<button class="btn sm pri" data-act="go" data-v="calendar">Open calendar</button>`))}</div>
+   <div class="card"><div class="cardhead"><h2>Recently logged</h2><button class="btn sm" data-act="go" data-v="spending">See all</button></div>${recent.length ? '<div class="list">' + recent.map(txRow).join('') + '</div>' : empty('No spending logged yet', 'Tap “Log spending” after your next purchase — it takes 5 seconds.')}</div>
+  </div><div class="grid" style="align-content:start">
+   <div class="card"><h2>Can I afford it?</h2><p class="muted small" style="margin:0 0 10px">Type a price — no mental math.</p><div class="row"><input type="number" id="afford" placeholder="0.00" inputmode="decimal" class="grow" style="max-width:none;flex:1"></div><div id="affordres"></div></div>
+   <div class="card"><div class="cardhead"><h2>No-spend days</h2><button class="btn sm ${S.nospend[today()] ? 'pri' : ''}" data-act="nospend">${S.nospend[today()] ? '✓ Today counted' : 'Today was no-spend'}</button></div>
+    <div class="ns-days">${Array.from({ length: dim }, (_, i) => { const d = ym + '-' + pad(i + 1); return `<i class="${S.nospend[d] ? 'on' : ''} ${i + 1 === tdNum ? 'td' : ''}" title="${shortDate(d)}"></i>`; }).join('')}</div><p class="muted small" style="margin:10px 0 0">Small wins count. Every green square is money that stayed with you.</p></div>
+   <div class="card"><div class="cardhead"><h2>Goals in motion</h2><button class="btn sm" data-act="go" data-v="goals">Open</button></div>${goals.length ? '<div class="list">' + goals.slice(0, 4).map(g => `<div class="li"><div class="grow"><div class="t">${esc(g.title)}</div>${g.date ? `<div class="s">by ${shortDate(g.date)}, ${g.date.slice(0, 4)}</div>` : ''}</div>${statusPill(g.status)}</div>`).join('') + '</div>' : empty('No goals yet', 'What is all this budgeting for? Add one.')}</div>
+  </div></div>`;
+};
+AFTER.today = () => {
+  const inp = $('#afford'); if (!inp) return;
+  inp.addEventListener('input', () => {
+    const v = num(inp.value); const md = monthData(thisYM()); const r = $('#affordres');
+    if (!v) { r.innerHTML = ''; return; }
+    const left = md.safe - v; const pd = md.daysLeft ? left / md.daysLeft : left;
+    r.innerHTML = left >= 0 ? `<div class="afford-res" style="background:var(--good-soft)">✅ <b>Yes.</b> You’d still have ${money(left)} safe to spend — about ${money(pd)} a day for the rest of the month.</div>`
+      : `<div class="afford-res" style="background:var(--bad-soft)">⏸️ <b>Not this month.</b> It would put you ${money(-left)} over. Try a savings fund for it instead.</div>`;
+  });
+};
+function spendStack(md) {
+  const parts = [['Spending', md.expense, '#d08a3c'], ['Debt payments', md.debtPaid, '#c25d6e'], ['Savings', md.saving, '#6f8fc8'], ['Bills still due', md.upcomingTotal, 'color-mix(in srgb,var(--muted) 45%,var(--soft))'], ['Safe to spend', Math.max(0, md.safe), 'color-mix(in srgb,var(--good) 35%,var(--panel))']];
+  const tot = Math.max(md.income, sum(parts, p => p[1])) || 1;
+  return `<div class="stack">${parts.map(p => p[1] > 0 ? `<i style="width:${(p[1] / tot * 100).toFixed(2)}%;background:${p[2]}" title="${p[0]}: ${money(p[1])}"></i>` : '').join('')}</div><div class="legend">${parts.map(p => `<span><i class="dot" style="background:${p[2]}"></i>${p[0]} ${money(p[1], { round: true })}</span>`).join('')}</div>`;
+}
+VIEWS.month = () => {
+  const md = monthData(viewYM); const m = S.months[viewYM] || {};
+  const parts = S.categories.map(c => ({ l: c.name, v: md.byCat[c.id] || 0, c: c.color })).filter(p => p.v).sort((a, b) => b.v - a.v);
+  const top = parts.slice(0, 1)[0];
+  const needs = sum(S.categories.filter(c => c.group === 'needs'), c => md.byCat[c.id] || 0), wants = md.expense - needs;
+  return head(monthName(viewYM), 'Income vs. spending, where the money went, and what’s left.', `<button class="btn" data-act="income">Set expected income</button>`) + monthPicker(viewYM, 'vym') +
+  `<div class="grid g4" style="margin-bottom:16px">
+   <div class="card kpi good"><div class="label">Income</div><div class="val">${money(md.income)}</div><div class="sub">${md.planned ? 'expected ' + money(md.planned, { round: true }) : 'set your expected income'}</div></div>
+   <div class="card kpi"><div class="label">Total going out</div><div class="val">${money(md.spent)}</div><div class="sub">${money(md.expense, { round: true })} spending · ${money(md.saving + md.debtPaid, { round: true })} saving & debt</div></div>
+   <div class="card kpi"><div class="label">Bills still due</div><div class="val">${money(md.upcomingTotal)}</div><div class="sub">${md.upcoming.length} unpaid</div></div>
+   <div class="card kpi ${md.safe < 0 ? 'bad' : 'acc'}"><div class="label">Safe to spend</div><div class="val">${money(md.safe)}</div><div class="sub">${md.daysLeft && viewYM === thisYM() ? money(Math.max(0, md.perDay)) + ' a day left' : viewYM < thisYM() ? (md.safe >= 0 ? 'left over 🎉' : 'over budget') : 'planned'}</div></div></div>
+  <div class="card" style="margin-bottom:16px"><h2>Where it’s going</h2>${spendStack(md)}</div>
+  <div class="grid g2" style="margin-bottom:16px">
+   <div class="card"><h2>Spending by category</h2>${parts.length ? `<div class="donutwrap">${donut(parts, money(md.expense, { round: true }), 'spent')}<div class="list">${parts.slice(0, 8).map(p => `<div class="li" style="padding:6px 0"><i class="dot" style="background:${p.c}"></i><div class="grow small">${esc(p.l)}</div><span class="small num">${money(p.v)} · ${Math.round(p.v / md.expense * 100)}%</span></div>`).join('')}</div></div>` : empty('No spending yet', 'Logged purchases will appear here as a chart.')}</div>
+   <div class="card"><h2>Needs vs. wants</h2>${md.expense ? `<div style="margin:6px 0 14px">${bar(needs / md.expense * 100, '#3f7d6e', 'thick')}</div><div class="row" style="justify-content:space-between"><span><i class="dot" style="background:#3f7d6e"></i> Needs <b>${money(needs)}</b></span><span>Wants <b>${money(wants)}</b> <i class="dot" style="background:var(--soft)"></i></span></div>` : '<p class="muted">Nothing logged yet.</p>'}
+    ${top ? `<div class="callout" style="margin-top:16px">💡 Biggest category: <b>${esc(top.l)}</b> at ${money(top.v)}. ${budgetTip(md)}</div>` : ''}
+    <h3 style="margin:18px 0 8px">Notes for this month</h3><textarea id="mnote" placeholder="Anything worth remembering…">${esc(m.note || '')}</textarea></div></div>
+  <div class="card"><div class="cardhead"><h2>Budget vs. actual</h2><button class="btn sm" data-act="go" data-v="budget">Edit budgets</button></div>${bvaList(md)}</div>`;
+};
+AFTER.month = () => { const t = $('#mnote'); if (t) t.addEventListener('input', () => { (S.months[viewYM] ||= { budgets: {} }).note = t.value; save(); }); };
+function budgetTip(md) {
+  const over = S.categories.filter(c => md.budgets[c.id] && (md.byCat[c.id] || 0) > md.budgets[c.id]);
+  return over.length ? `${over.length} categor${over.length > 1 ? 'ies are' : 'y is'} over budget: ${over.slice(0, 3).map(c => esc(c.name)).join(', ')}.` : 'Every category is within budget. Nice.';
+}
+function bvaList(md) {
+  const rows = S.categories.filter(c => md.budgets[c.id] || md.byCat[c.id]);
+  if (!rows.length) return empty('No budgets yet', 'Set a monthly amount for each category on the Budget page.');
+  return `<div class="list bva">${rows.map(c => { const b = md.budgets[c.id] || 0, a = md.byCat[c.id] || 0; const over = b && a > b; return `<div class="li"><span class="small"><i class="dot" style="background:${c.color}"></i> ${esc(c.name)}</span>${bar(b ? a / b * 100 : 100, over ? '' : c.color, over ? 'over' : '')}<span class="small num" style="text-align:right">${money(a, { round: true })} / ${money(b, { round: true })} ${over ? '<b class="neg">over</b>' : b ? `<span class="muted">${money(b - a, { round: true })} left</span>` : ''}</span></div>`; }).join('')}</div>`;
+}
+VIEWS.spending = () => {
+  const md = monthData(viewYM);
+  let txs = md.txs.slice().sort((a, b) => b.date.localeCompare(a.date));
+  if (txFilter.type !== 'all') txs = txs.filter(t => t.type === txFilter.type);
+  if (txFilter.cat !== 'all') txs = txs.filter(t => t.catId === txFilter.cat);
+  if (txFilter.q) { const q = txFilter.q.toLowerCase(); txs = txs.filter(t => (t.name + ' ' + t.note).toLowerCase().includes(q)); }
+  const out = txs.filter(t => t.type !== 'income');
+  return head('Spending log', 'Every dollar you’ve tracked this month, in one place.', `<button class="btn" data-act="csv">${ic('dl')} Export CSV</button><button class="btn pri" data-act="log">${ic('plus')} Log spending</button>`) + monthPicker(viewYM, 'vym') +
+  `<div class="grid g3" style="margin-bottom:16px"><div class="card kpi"><div class="label">Entries</div><div class="val">${txs.length}</div></div><div class="card kpi"><div class="label">Total going out</div><div class="val">${money(sum(out, t => t.amount))}</div></div><div class="card kpi"><div class="label">Average purchase</div><div class="val">${money(out.length ? sum(out, t => t.amount) / out.length : 0)}</div></div></div>
+  <div class="card"><div class="row" style="margin-bottom:10px"><input type="search" id="q" placeholder="Search…" value="${esc(txFilter.q)}" style="flex:1;min-width:160px">
+   <select id="ftype" style="width:auto">${[['all', 'All types'], ['expense', 'Spending'], ['income', 'Income'], ['saving', 'Savings'], ['debt', 'Debt payments']].map(([v, l]) => `<option value="${v}" ${txFilter.type === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+   <select id="fcat" style="width:auto"><option value="all">All categories</option>${S.categories.map(c => `<option value="${c.id}" ${txFilter.cat === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+   ${txs.length ? '<div class="list">' + txs.map(txRow).join('') + '</div>' : empty('Nothing here yet', 'Log a purchase and it’ll land in this list.', `<button class="btn pri sm" data-act="log">Log spending</button>`)}</div>`;
+};
+AFTER.spending = () => {
+  const q = $('#q'); q.addEventListener('input', () => { txFilter.q = q.value; const p = q.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); });
+  $('#ftype').addEventListener('change', e => { txFilter.type = e.target.value; render(); });
+  $('#fcat').addEventListener('change', e => { txFilter.cat = e.target.value; render(); });
+};
+VIEWS.calendar = () => {
+  const ym = calYM; const first = parse(ym + '-01'); const lead = (first.getDay() + 6) % 7; const dim = daysIn(ym);
+  const evs = monthEvents(ym); const byDay = {}; evs.forEach(x => (byDay[x.date] ||= []).push(x));
+  let cells = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="dow">${d}</div>`).join('');
+  for (let i = 0; i < lead; i++) cells += '<div class="day blank"></div>';
+  for (let d = 1; d <= dim; d++) {
+    const ds = ym + '-' + pad(d); const list = byDay[ds] || [];
+    cells += `<button class="day ${ds === today() ? 'today' : ''}" data-act="newevent" data-d="${ds}"><span class="n">${d}</span>${list.slice(0, 3).map(x => `<span class="ev ${x.paid ? 'paid' : ''}"><i class="dot" style="background:${kindDot(x.e)};width:7px;height:7px"></i><span class="lbl">&nbsp;${esc(x.e.title)}</span></span>`).join('')}${list.length > 3 ? `<span class="more">+${list.length - 3} more</span>` : ''}</button>`;
+  }
+  const inc = sum(evs.filter(x => x.e.kind === 'payday'), x => x.e.amount), out = sum(evs.filter(x => x.e.kind === 'bill' || x.e.kind === 'transfer'), x => x.e.amount);
+  return head('Calendar', 'Bills, paydays, savings transfers and little reminders — tap any day to add one.', `<button class="btn pri" data-act="event">${ic('plus')} Add bill or payday</button>`) +
+  `<div class="grid g-7-5"><div class="card"><div class="cardhead"><div class="row"><button class="btn sm ghost" data-act="cym" data-v="${addMonths(ym, -1)}">${ic('left')}</button><h2>${monthName(ym)}</h2><button class="btn sm ghost" data-act="cym" data-v="${addMonths(ym, 1)}">${ic('right')}</button></div><button class="btn sm" data-act="cym" data-v="${thisYM()}">Today</button></div>
+   <div class="cal">${cells}</div><div class="legend"><span><i class="dot" style="background:var(--good)"></i>Payday</span><span><i class="dot" style="background:var(--bad)"></i>Bill</span><span><i class="dot" style="background:#6f8fc8"></i>Savings transfer</span><span><i class="dot" style="background:var(--muted)"></i>Reminder</span></div></div>
+   <div class="grid" style="align-content:start"><div class="grid g2"><div class="card kpi good"><div class="label">Coming in</div><div class="val">${money(inc, { round: true })}</div></div><div class="card kpi"><div class="label">Scheduled out</div><div class="val">${money(out, { round: true })}</div></div></div>
+   <div class="card"><h2>This month</h2>${evs.length ? '<div class="list">' + evs.map(x => eventRow(x)).join('') + '</div>' : empty('Your month is empty', 'Add rent, paydays and subscriptions once — set them to repeat and you’re done forever.')}<p class="muted tiny" style="margin:10px 0 0">Ticking a bill off records it as a payment automatically.</p></div></div></div>`;
+};
+VIEWS.paychecks = () => {
+  const ym = viewYM; const evs = monthEvents(ym);
+  const pays = evs.filter(x => x.e.kind === 'payday');
+  const outs = evs.filter(x => x.e.kind === 'bill' || x.e.kind === 'transfer');
+  let body;
+  if (!pays.length) body = `<div class="card">${empty('Add your paydays first', 'Put your paycheck on the calendar (weekly, every two weeks or monthly) and this page splits your bills between paychecks automatically.', `<button class="btn pri sm" data-act="event" data-kind="payday">Add a payday</button>`)}</div>`;
+  else {
+    const groups = pays.map((p, i) => ({ p, from: i === 0 ? ym + '-01' : p.date, to: pays[i + 1] ? pays[i + 1].date : ym + '-32', items: [] }));
+    for (const o of outs) { const g = groups.find(g => o.date >= g.from && o.date < g.to) || groups[0]; g.items.push(o); }
+    body = `<div class="grid g2">${groups.map((g, i) => { const tot = sum(g.items, x => x.e.amount); const left = g.p.e.amount - tot; return `<div class="card"><div class="cardhead"><div><h2>Paycheck ${i + 1} · ${shortDate(g.p.date)}</h2><div class="muted small">${esc(g.p.e.title)}</div></div><span class="money pos" style="font-size:22px">${money(g.p.e.amount)}</span></div>
+     <div class="muted small" style="margin-bottom:4px">Covers bills due ${i === 0 && g.p.date > ym + '-01' ? 'from the 1st' : 'from ' + shortDate(g.from)} until the next payday</div>
+     ${g.items.length ? '<div class="list">' + g.items.map(x => eventRow(x)).join('') + '</div>' : '<p class="muted small">No bills in this window.</p>'}
+     <div style="margin-top:12px">${bar(g.p.e.amount ? tot / g.p.e.amount * 100 : 0, left < 0 ? 'var(--bad)' : '')}</div>
+     <div class="row" style="justify-content:space-between;margin-top:8px"><span class="small muted">Bills & transfers ${money(tot)}</span><span class="small">Left for spending <b class="${left < 0 ? 'neg' : 'pos'}">${money(left)}</b></span></div></div>`; }).join('')}</div>
+     <div class="callout" style="margin-top:16px">💡 Each bill is assigned to the paycheck you’ll have <i>before</i> it’s due. If one paycheck goes negative, move a bill’s due date or shift a savings transfer to the bigger paycheck.</div>`;
+  }
+  return head('Paycheck plan', 'Give every paycheck a job — see exactly which bills each one covers.', `<button class="btn" data-act="event" data-kind="payday">${ic('plus')} Add payday</button>`) + monthPicker(ym, 'vym') + body;
+};
+VIEWS.budget = () => {
+  const md = monthData(viewYM); const groups = [['needs', 'Needs — the must-pays'], ['wants', 'Wants — the fun stuff']];
+  const totalBudget = sum(S.categories, c => md.budgets[c.id]); const plannedOut = sum(S.events.filter(e => e.fundId || e.debtId), e => occurrences(e, viewYM).length * e.amount);
+  const leftToAssign = md.income - totalBudget - plannedOut;
+  return head('Budget', 'Give each category a monthly amount (an “envelope”). Change one month only, or your default for every month.', `<button class="btn" data-act="cat">${ic('plus')} Add category</button>`) + monthPicker(viewYM, 'vym') +
+  `<div class="grid g4" style="margin-bottom:16px"><div class="card kpi good"><div class="label">Income</div><div class="val">${money(md.income, { round: true })}</div></div><div class="card kpi"><div class="label">Budgeted to categories</div><div class="val">${money(totalBudget, { round: true })}</div></div><div class="card kpi"><div class="label">Savings & debt transfers</div><div class="val">${money(plannedOut, { round: true })}</div></div><div class="card kpi ${leftToAssign < 0 ? 'bad' : 'acc'}"><div class="label">Left to give a job</div><div class="val">${money(leftToAssign, { round: true })}</div><div class="sub">${leftToAssign < 0 ? 'budget is bigger than income' : leftToAssign < 1 ? 'every dollar has a job 🎉' : 'assign it or send it to savings'}</div></div></div>` +
+  groups.map(([g, title]) => { const cs = S.categories.filter(c => c.group === g); return `<div class="card" style="margin-bottom:16px"><h2>${title}</h2><div class="tblwrap"><table class="tbl"><thead><tr><th>Category</th><th class="r">This month</th><th class="r">Spent</th><th style="width:28%">Progress</th><th class="r">Left</th><th></th></tr></thead><tbody>${cs.map(c => { const b = md.budgets[c.id] || 0, a = md.byCat[c.id] || 0; return `<tr><td><i class="dot" style="background:${c.color}"></i> ${esc(c.name)}</td><td class="r"><input type="number" class="bud" data-id="${c.id}" value="${b}" style="width:110px;text-align:right"></td><td class="r num">${money(a)}</td><td>${bar(b ? a / b * 100 : 0, a > b && b ? 'var(--bad)' : c.color)}</td><td class="r num ${b - a < 0 ? 'neg' : ''}">${money(b - a)}</td><td class="r"><button class="link" data-act="cat" data-id="${c.id}">Edit</button></td></tr>`; }).join('')}</tbody><tfoot><tr><td><b>Total</b></td><td class="r"><b>${money(sum(cs, c => md.budgets[c.id]))}</b></td><td class="r"><b>${money(sum(cs, c => md.byCat[c.id] || 0))}</b></td><td colspan="3"></td></tr></tfoot></table></div></div>`; }).join('') +
+  `<p class="muted small">Typing an amount changes <b>${monthName(viewYM)}</b> only. To change your default for all months, use Edit on the category.</p>`;
+};
+AFTER.budget = () => document.querySelectorAll('.bud').forEach(inp => inp.addEventListener('change', () => { const m = (S.months[viewYM] ||= { budgets: {} }); (m.budgets ||= {})[inp.dataset.id] = num(inp.value); save(); render(); }));
+VIEWS.savings = () => {
+  const saved = sum(S.funds, f => f.saved), target = sum(S.funds, f => f.target);
+  return head('Savings', 'Money you’re setting aside, one fund at a time.', `<button class="btn pri" data-act="fund">${ic('plus')} New fund</button>`) +
+  `<div class="grid g3" style="margin-bottom:16px"><div class="card kpi good"><div class="label">Saved so far</div><div class="val">${money(saved)}</div></div><div class="card kpi"><div class="label">Combined target</div><div class="val">${money(target)}</div></div><div class="card kpi acc"><div class="label">Overall progress</div><div class="val">${target ? Math.round(saved / target * 100) : 0}%</div></div></div>` +
+  (S.funds.length ? `<div class="grid g2">${S.funds.map(f => { const pct = f.target ? f.saved / f.target * 100 : 0; const togo = Math.max(0, f.target - f.saved); let pace = ''; if (f.date && togo > 0) { const mo = Math.max(1, (parse(f.date).getFullYear() - new Date().getFullYear()) * 12 + parse(f.date).getMonth() - new Date().getMonth()); pace = `About <b>${money(togo / mo)}/mo</b> to reach it by ${shortDate(f.date)}, ${f.date.slice(0, 4)}`; } return `<div class="card"><div class="cardhead"><h3><i class="dot" style="background:${f.color}"></i> ${esc(f.name)}</h3><div><button class="link" data-act="addmoney" data-id="${f.id}">+ Add money</button><button class="link" data-act="fund" data-id="${f.id}">Edit</button></div></div>
+    <div class="money" style="font-size:24px">${money(f.saved)} <span class="muted small" style="font-family:var(--sans)">of ${money(f.target)}</span></div><div style="margin:10px 0 8px">${bar(pct, f.color, 'thick')}</div>
+    <div class="row small" style="justify-content:space-between"><span><b>${Math.round(pct)}%</b> there${pct >= 100 ? ' 🎉' : ''}</span><span class="muted">${money(togo)} to go</span></div>${pace ? `<div class="muted small" style="margin-top:6px">${pace}</div>` : ''}</div>`; }).join('')}</div>` : `<div class="card">${empty('No savings funds yet', 'Emergency cushion, a trip, a new laptop — make a fund for each and watch them fill.', `<button class="btn pri sm" data-act="fund">Create your first fund</button>`)}</div>`);
+};
+VIEWS.debt = () => {
+  const owed = sum(S.debts, d => d.balance), mins = sum(S.debts, d => d.min);
+  const avgApr = owed ? sum(S.debts, d => d.apr * d.balance) / owed : 0;
+  const { strategy, extra } = S.debtPlan; const sim = simulate(strategy, +extra || 0); const base = simulate(strategy, 0, false); const alt = simulate(strategy === 'avalanche' ? 'snowball' : 'avalanche', +extra || 0);
+  const when = n => { const ym = addMonths(thisYM(), n); return MON[+ym.slice(5) - 1] + ' ' + ym.slice(0, 4); };
+  const order = sim.ds.slice().sort((a, b) => a.paidOff - b.paidOff);
+  return head('Debt payoff', 'Every balance, your payoff plan, and roughly when each one will be gone.', `<button class="btn pri" data-act="debt">${ic('plus')} New debt</button>`) +
+  `<div class="grid g4" style="margin-bottom:16px"><div class="card kpi"><div class="label">Total still owed</div><div class="val">${money(owed)}</div></div><div class="card kpi"><div class="label">Minimums each month</div><div class="val">${money(mins)}</div></div><div class="card kpi"><div class="label">Average interest</div><div class="val">${avgApr.toFixed(1)}%</div></div><div class="card kpi ${sim.stuck ? 'bad' : 'good'}"><div class="label">Debt-free date</div><div class="val">${S.debts.length ? (sim.stuck ? 'Never*' : when(sim.months)) : '—'}</div><div class="sub">${sim.stuck ? 'minimums don’t cover interest' : S.debts.length ? sim.months + ' months away' : ''}</div></div></div>` +
+  (S.debts.length ? `<div class="grid g-7-5"><div class="grid" style="align-content:start">${S.debts.map(d => { const s = sim.ds.find(x => x.id === d.id); const orig = Math.max(d.original || d.balance, d.balance); const pct = orig ? (1 - d.balance / orig) * 100 : 0; const focus = order.find(x => x.bal !== undefined) && order[0]?.id === d.id; return `<div class="card"><div class="cardhead"><h3><i class="dot" style="background:${d.color || 'var(--bad)'}"></i> ${esc(d.name)} ${focus ? '<span class="tag pill-ip">Focus first</span>' : ''}</h3><div><button class="link" data-act="paydebt" data-id="${d.id}">+ Payment</button><button class="link" data-act="debt" data-id="${d.id}">Edit</button></div></div>
+     <div class="small"><b class="money" style="font-size:20px">${money(d.balance)}</b> owed · ${d.apr}% APR · ${money(d.min)}/mo</div><div style="margin:10px 0 8px">${bar(pct, d.color)}</div>
+     <div class="row small" style="justify-content:space-between"><span class="muted">${Math.round(pct)}% paid off</span><span>${d.balance <= 0 ? '<b class="pos">Paid off 🎉</b>' : s && s.paidOff ? 'Clear by <b>' + when(s.paidOff) + '</b>' : '—'}</span></div></div>`; }).join('')}</div>
+    <div class="grid" style="align-content:start"><div class="card"><h2>Your payoff plan</h2><p class="muted small" style="margin:4px 0 12px">Which debt gets your extra money first?</p>
+     <div class="seg" style="margin-bottom:14px"><button class="${strategy === 'avalanche' ? 'on' : ''}" data-act="strat" data-v="avalanche">Highest interest first</button><button class="${strategy === 'snowball' ? 'on' : ''}" data-act="strat" data-v="snowball">Smallest balance first</button></div>
+     <label class="f"><span>Extra I can pay each month (on top of minimums)</span><input type="number" id="extra" value="${extra || 0}"></label>
+     <div class="list">${order.map((x, i) => `<div class="li"><span class="stepn">${i + 1}</span><div class="grow">${esc(debt(x.id).name)}</div><span class="small">${x.paidOff ? when(x.paidOff) : '—'}</span></div>`).join('')}</div>
+     ${!sim.stuck ? `<div class="callout" style="margin-top:14px">💸 This plan pays <b>${money(sim.totalInt, { round: true })}</b> in interest. ${base.stuck ? 'Minimums alone would never finish.' : `Minimums only: ${money(base.totalInt, { round: true })} over ${base.months} months — <b>you save ${money(Math.max(0, base.totalInt - sim.totalInt), { round: true })}</b> and ${Math.max(0, base.months - sim.months)} months.`}</div>
+     <p class="muted tiny" style="margin:10px 0 0">The ${strategy === 'avalanche' ? 'smallest-balance (snowball)' : 'highest-interest (avalanche)'} method would cost ${money(alt.totalInt, { round: true })} and take ${alt.months} months. Estimates only — your lender’s numbers may differ.</p>` : '<div class="callout warn" style="margin-top:14px">At least one minimum payment is smaller than its monthly interest. Raise the payment or add extra to see a payoff date.</div>'}</div></div></div>` : `<div class="card">${empty('No debts added', 'Add a credit card or loan to get a payoff date and a plan.', `<button class="btn pri sm" data-act="debt">Add a debt</button>`)}</div>`);
+};
+AFTER.debt = () => { const x = $('#extra'); if (x) x.addEventListener('change', () => { S.debtPlan.extra = num(x.value); save(); render(); }); };
+VIEWS.goals = () => {
+  const c = s => S.goals.filter(g => g.status === s).length;
+  return head('Goals', 'The bigger picture — what all this planning is working toward.', `<button class="btn pri" data-act="goal">${ic('plus')} New goal</button>`) +
+  `<div class="grid g3" style="margin-bottom:16px"><div class="card kpi"><div class="label">Not started</div><div class="val">${c('ns')}</div></div><div class="card kpi warn"><div class="label">In progress</div><div class="val">${c('ip')}</div></div><div class="card kpi good"><div class="label">Done</div><div class="val">${c('dn')}</div></div></div>
+  <div class="card">${S.goals.length ? '<div class="list">' + S.goals.slice().sort((a, b) => 'ipnsdn'.indexOf(a.status) - 'ipnsdn'.indexOf(b.status)).map(g => `<div class="li"><div class="grow"><div class="t">${esc(g.title)}</div><div class="s">${g.date ? 'by ' + shortDate(g.date) + ', ' + g.date.slice(0, 4) : 'no date'}${g.note ? ' · ' + esc(g.note) : ''}</div></div><button class="tag pill pill-${g.status}" data-act="cycle" data-id="${g.id}" title="Tap to change status">${({ ns: 'Not started', ip: 'In progress', dn: 'Done' })[g.status]}</button><button class="link" data-act="goal" data-id="${g.id}">Edit</button></div>`).join('') + '</div>' : empty('No goals yet', 'Big or small — “pay off the Visa”, “three months of rent saved”.', `<button class="btn pri sm" data-act="goal">Add a goal</button>`)}
+  <p class="muted tiny" style="margin:10px 0 0">Tap a status pill to cycle it: not started → in progress → done.</p></div>`;
+};
+VIEWS.year = () => {
+  const y = viewYM.slice(0, 4); const rows = MON.map((l, i) => { const md = monthData(y + '-' + pad(i + 1)); const hasData = md.txs.length > 0; return { l, ym: y + '-' + pad(i + 1), inc: hasData ? md.received : 0, out: hasData ? md.spent : 0, exp: md.expense, sav: md.saving, dbt: md.debtPaid, hasData }; });
+  const T = k => sum(rows, r => r[k]); const catTotals = S.categories.map(c => ({ c, v: sum(S.tx.filter(t => t.type === 'expense' && t.catId === c.id && t.date.startsWith(y)), t => t.amount) })).filter(x => x.v).sort((a, b) => b.v - a.v);
+  const active = rows.filter(r => r.hasData).length || 1;
+  return head('Year review — ' + y, 'Your whole year at a glance: what came in, what went out, and where.', `<button class="btn sm ghost" data-act="vym" data-v="${(+y - 1)}-01">${ic('left')} ${+y - 1}</button><button class="btn sm ghost" data-act="vym" data-v="${(+y + 1)}-01">${+y + 1} ${ic('right')}</button>`) +
+  `<div class="grid g4" style="margin-bottom:16px"><div class="card kpi good"><div class="label">Income received</div><div class="val">${money(T('inc'), { round: true })}</div></div><div class="card kpi"><div class="label">Spending</div><div class="val">${money(T('exp'), { round: true })}</div><div class="sub">avg ${money(T('exp') / active, { round: true })}/mo</div></div><div class="card kpi acc"><div class="label">Saved</div><div class="val">${money(T('sav'), { round: true })}</div></div><div class="card kpi"><div class="label">Debt paid</div><div class="val">${money(T('dbt'), { round: true })}</div></div></div>
+  <div class="card" style="margin-bottom:16px"><h2>Income vs. money out</h2>${columns(rows, [{ k: 'inc', l: 'Income', c: '#5aa07a' }, { k: 'out', l: 'Money out', c: '#d08a3c' }])}</div>
+  <div class="grid g2"><div class="card"><h2>Month by month</h2><div class="tblwrap"><table class="tbl"><thead><tr><th>Month</th><th class="r">In</th><th class="r">Out</th><th class="r">Net</th></tr></thead><tbody>${rows.map(r => `<tr><td><button class="link" style="padding:0;color:var(--ink)" data-act="openmonth" data-v="${r.ym}">${r.l}</button></td><td class="r num">${r.hasData ? money(r.inc, { round: true }) : '—'}</td><td class="r num">${r.hasData ? money(r.out, { round: true }) : '—'}</td><td class="r num ${r.inc - r.out < 0 ? 'neg' : 'pos'}">${r.hasData ? money(r.inc - r.out, { round: true }) : '—'}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><h2>Top categories this year</h2>${catTotals.length ? `<div class="donutwrap">${donut(catTotals.map(x => ({ l: x.c.name, v: x.v, c: x.c.color })), money(T('exp'), { round: true }), 'spent')}<div class="list">${catTotals.slice(0, 7).map(x => `<div class="li" style="padding:6px 0"><i class="dot" style="background:${x.c.color}"></i><div class="grow small">${esc(x.c.name)}</div><span class="small num">${money(x.v, { round: true })}</span></div>`).join('')}</div></div>` : empty('No data yet', 'Your year fills in as you log.')}</div></div>`;
+};
+VIEWS.start = () => {
+  const steps = [
+    ['Pick your currency and name', 'Settings → currency. Everything updates instantly.', S.settings.name || S.settings.currency !== 'USD', 'settings'],
+    ['Add your paydays', 'Calendar → Add → Payday. Set it to repeat weekly, every 2 weeks or monthly.', S.events.some(e => e.kind === 'payday'), 'calendar'],
+    ['Add your regular bills', 'Rent, phone, subscriptions… set them to repeat once and you’re done.', S.events.filter(e => e.kind === 'bill').length >= 2, 'calendar'],
+    ['Set your budgets', 'Budget → type a monthly amount for each category.', S.categories.some(c => c.budget > 0), 'budget'],
+    ['Create a savings fund', 'Savings → New fund. Emergency fund is a great first one.', S.funds.length > 0, 'savings'],
+    ['Log your first purchase', 'Tap “Log spending”. Amount, category, done.', S.tx.some(t => t.type === 'expense'), 'today'],
+  ];
+  const done = steps.filter(s => s[2]).length;
+  return head('Start here', 'Six small steps. Do one now, the rest whenever — the planner remembers where you are.') +
+  `<div class="grid g-7-5"><div class="card steps"><div class="cardhead"><h2>Your setup checklist</h2><span class="tag ${done === steps.length ? 'pill-dn' : 'pill-ip'}">${done} of ${steps.length} done</span></div><div style="margin-bottom:10px">${bar(done / steps.length * 100)}</div>
+   <div class="list">${steps.map((s, i) => `<div class="li"><span class="stepn ${s[2] ? 'done' : ''}">${s[2] ? '✓' : i + 1}</span><div class="grow"><div class="t" style="white-space:normal">${s[0]}</div><div class="s">${s[1]}</div></div><button class="btn sm" data-act="go" data-v="${s[3]}">Go</button></div>`).join('')}</div></div>
+   <div class="grid" style="align-content:start"><div class="card"><h2>How each page helps</h2><div class="list small">${[['Today', 'Safe-to-spend, what’s due, and one thing to do.'], ['Month', 'Income vs. spending with charts for any month.'], ['Spending log', 'Every purchase, searchable, exportable.'], ['Calendar', 'Bills & paydays that repeat on their own.'], ['Paycheck plan', 'Which bills each paycheck covers.'], ['Budget', 'Monthly envelopes for each category.'], ['Savings / Debt / Goals', 'Progress bars and payoff dates.'], ['Year review', 'Twelve months in one view.']].map(([a, b]) => `<div class="li" style="padding:8px 0"><b style="width:120px;flex:none">${a}</b><span class="muted">${b}</span></div>`).join('')}</div></div>
+   <div class="card"><h2>Your data stays yours</h2><p class="small muted" style="margin:6px 0 10px">Everything is saved in this browser on this device. No account, no bank login. Make a backup now and then — it’s one tap.</p><button class="btn" data-act="backup">${ic('dl')} Download backup</button></div></div></div>`;
+};
+VIEWS.settings = () => {
+  const s = S.settings;
+  return head('Settings', 'Make it yours — currency, look, categories and backups.') +
+  `<div class="grid g2"><div class="grid" style="align-content:start"><div class="card"><h2>Basics</h2><label class="f"><span>Your name (for greetings)</span><input type="text" id="s-name" value="${esc(s.name)}" placeholder="e.g. Sam"></label>
+   <label class="f"><span>Currency</span><select id="s-cur">${CURRENCIES.map(([c, n]) => `<option value="${c}" ${c === s.currency ? 'selected' : ''}>${n} — ${c}</option>`).join('')}</select></label></div>
+   <div class="card"><h2>Look & feel</h2><p class="muted small" style="margin:4px 0 8px">Theme</p><div class="seg" style="margin-bottom:16px">${[['auto', 'Match device'], ['light', 'Day'], ['dark', 'Night']].map(([v, l]) => `<button class="${s.theme === v ? 'on' : ''}" data-act="settheme" data-v="${v}">${l}</button>`).join('')}</div>
+   <p class="muted small" style="margin:0 0 8px">Accent colour</p><div class="swatches">${ACCENTS.map(([n, c]) => `<button title="${n}" class="${s.accent === c ? 'on' : ''}" style="background:${c}" data-act="accent" data-v="${c}"></button>`).join('')}</div></div>
+   <div class="card"><h2>Backup & restore</h2><p class="muted small" style="margin:4px 0 12px">Your planner lives in this browser. Download a backup to move it to another device or keep it safe.</p><div class="row"><button class="btn" data-act="backup">${ic('dl')} Download backup</button><button class="btn" data-act="restore">${ic('up')} Restore from backup</button><button class="btn" data-act="csv">${ic('dl')} Export spending CSV</button></div><input type="file" id="restorefile" accept=".json,application/json" hidden></div>
+   <div class="card"><h2>Start fresh</h2><div class="row"><button class="btn" data-act="sample">Load sample data</button><button class="btn danger" data-act="wipe">Erase everything</button></div></div></div>
+   <div class="card" style="align-self:start"><div class="cardhead"><h2>Categories</h2><button class="btn sm" data-act="cat">${ic('plus')} Add</button></div><div class="list">${S.categories.map(c => `<div class="li"><i class="dot" style="background:${c.color}"></i><div class="grow"><div class="t">${esc(c.name)}</div><div class="s">${c.group === 'needs' ? 'Need' : 'Want'} · ${money(c.budget)}/mo</div></div><button class="link" data-act="cat" data-id="${c.id}">Edit</button></div>`).join('')}</div></div></div>`;
+};
+AFTER.settings = () => {
+  $('#s-name').addEventListener('change', e => { S.settings.name = e.target.value.trim(); save(); render(); });
+  $('#s-cur').addEventListener('change', e => { S.settings.currency = e.target.value; fmtCache = {}; save(); render(); toast('Currency updated'); });
+  $('#restorefile').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (!d.categories || !d.tx) throw 0; if (!confirm('Replace everything in this planner with the backup?')) return; S = Object.assign(blankState(), d); fmtCache = {}; save(); render(); toast('Backup restored'); } catch { alert('That file isn’t a Clear Cents backup.'); } }; r.readAsText(f); });
+};
+
+/* ---------- modals ---------- */
+function modal(title, body, onSave, opts = {}) {
+  const el = document.createElement('div'); el.className = 'scrim';
+  el.innerHTML = `<form class="modal" novalidate><h2>${title}</h2>${body}<div class="actions">${opts.del ? '<button type="button" class="btn danger" data-m="del" style="margin-right:auto">Delete</button>' : ''}<button type="button" class="btn" data-m="cancel">Cancel</button><button type="submit" class="btn pri">${opts.ok || 'Save'}</button></div></form>`;
+  document.body.appendChild(el);
+  const close = () => el.remove(); const form = $('form', el);
+  el.addEventListener('mousedown', e => { if (e.target === el) close(); });
+  $('[data-m=cancel]', el).onclick = close;
+  if (opts.del) $('[data-m=del]', el).onclick = () => { if (confirm('Delete this? This can’t be undone.')) { opts.del(); close(); save(); render(); } };
+  form.onsubmit = e => { e.preventDefault(); const fd = Object.fromEntries(new FormData(form)); if (onSave(fd, form) === false) return; close(); save(); render(); };
+  if (opts.after) opts.after(form);
+  setTimeout(() => { const f = form.querySelector('[autofocus]') || form.querySelector('input,select'); f && f.focus(); }, 30);
+  document.addEventListener('keydown', function k(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', k); } });
+}
+const field = (label, html) => `<label class="f"><span>${label}</span>${html}</label>`;
+const catOptions = sel => ['needs', 'wants'].map(g => `<optgroup label="${g === 'needs' ? 'Needs' : 'Wants'}">${S.categories.filter(c => c.group === g).map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup>`).join('');
+function txModal(t) {
+  const isNew = !t; t = t || { type: 'expense', date: today(), name: '', amount: '', note: '', catId: S.categories.find(c => c.name === 'Groceries')?.id || S.categories[0]?.id };
+  const typeSel = `<div class="seg" style="margin-bottom:14px" id="tt">${[['expense', 'Spending'], ['income', 'Income'], ['saving', 'To savings'], ['debt', 'Debt payment']].map(([v, l]) => `<button type="button" class="${t.type === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div><input type="hidden" name="type" value="${t.type}">`;
+  modal(isNew ? 'Log a spend' : 'Edit entry', typeSel +
+    `<div class="frow">${field('Amount', `<input type="number" name="amount" step="0.01" inputmode="decimal" placeholder="0.00" value="${t.amount}" autofocus required>`)}${field('Date', `<input type="date" name="date" value="${t.date}">`)}</div>` +
+    `<div data-for="expense">${field('Category', `<select name="catId">${catOptions(t.catId)}</select>`)}</div>` +
+    `<div data-for="saving">${field('Savings fund', S.funds.length ? `<select name="fundId">${S.funds.map(f => `<option value="${f.id}" ${f.id === t.fundId ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}</select>` : '<div class="muted small">Create a savings fund first.</div>')}</div>` +
+    `<div data-for="debt">${field('Debt', S.debts.length ? `<select name="debtId">${S.debts.map(d => `<option value="${d.id}" ${d.id === t.debtId ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>` : '<div class="muted small">Add a debt first.</div>')}</div>` +
+    field('What was it?', `<input type="text" name="name" placeholder="e.g. Coffee run" value="${esc(t.name)}">`) + field('Notes (optional)', `<input type="text" name="note" placeholder="Anything worth remembering" value="${esc(t.note)}">`),
+    fd => {
+      const amount = num(fd.amount); if (!amount) { toast('Add an amount first'); return false; }
+      if (fd.type === 'saving' && !fd.fundId || fd.type === 'debt' && !fd.debtId) { toast('Pick where it goes first'); return false; }
+      if (!isNew) applyTx(t, -1);
+      const nt = Object.assign(isNew ? { id: uid() } : t, { type: fd.type, amount, date: fd.date || today(), name: fd.name.trim(), note: fd.note.trim(), catId: fd.type === 'expense' ? fd.catId : undefined, fundId: fd.type === 'saving' ? fd.fundId : undefined, debtId: fd.type === 'debt' ? fd.debtId : undefined });
+      applyTx(nt, 1); if (isNew) S.tx.push(nt); toast(isNew ? 'Logged ✓' : 'Saved');
+    },
+    { ok: isNew ? 'Add' : 'Save', del: isNew ? null : () => removeTx(t), after: form => {
+      const sync = () => { const v = form.type.value; form.querySelectorAll('[data-for]').forEach(d => d.style.display = d.dataset.for === v ? '' : 'none'); };
+      $('#tt', form).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; form.type.value = b.dataset.v; form.querySelectorAll('#tt button').forEach(x => x.classList.toggle('on', x === b)); sync(); });
+      sync();
+    } });
+}
+function eventModal(e, preset = {}) {
+  const isNew = !e; e = e || Object.assign({ title: '', kind: 'bill', date: today(), amount: '', repeat: 'monthly', paid: {} }, preset);
+  const link = e.fundId ? 'f:' + e.fundId : e.debtId ? 'd:' + e.debtId : e.catId ? 'c:' + e.catId : '';
+  modal(isNew ? 'Add to calendar' : 'Edit calendar item',
+    `<div class="seg" style="margin-bottom:14px" id="ek">${[['bill', 'Bill'], ['payday', 'Payday'], ['transfer', 'Savings transfer'], ['note', 'Reminder']].map(([v, l]) => `<button type="button" class="${e.kind === v ? 'on' : ''}" data-v="${v}">${l}</button>`).join('')}</div><input type="hidden" name="kind" value="${e.kind}">` +
+    field('Name', `<input type="text" name="title" value="${esc(e.title)}" placeholder="e.g. Rent" autofocus>`) +
+    `<div class="frow">${field('Date (first time)', `<input type="date" name="date" value="${e.date}">`)}<div data-hide="note">${field('Amount', `<input type="number" name="amount" step="0.01" value="${e.amount}" placeholder="0.00">`)}</div></div>` +
+    field('Repeats', `<select name="repeat">${[['none', 'Just once'], ['weekly', 'Every week'], ['biweekly', 'Every 2 weeks'], ['monthly', 'Every month'], ['yearly', 'Every year']].map(([v, l]) => `<option value="${v}" ${e.repeat === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`) +
+    `<div data-for="bill">${field('When paid, count it as', `<select name="link_bill"><optgroup label="Spending category">${S.categories.map(c => `<option value="c:${c.id}" ${link === 'c:' + c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup>${S.debts.length ? `<optgroup label="Debt payment">${S.debts.map(d => `<option value="d:${d.id}" ${link === 'd:' + d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</optgroup>` : ''}</select>`)}</div>` +
+    `<div data-for="transfer">${field('Into savings fund', S.funds.length ? `<select name="link_transfer">${S.funds.map(f => `<option value="f:${f.id}" ${link === 'f:' + f.id ? 'selected' : ''}>${esc(f.name)}</option>`).join('')}</select>` : '<div class="muted small">Create a savings fund first.</div>')}</div>`,
+    fd => {
+      if (!fd.title.trim()) { toast('Give it a name'); return false; }
+      const lk = fd.kind === 'bill' ? fd.link_bill : fd.kind === 'transfer' ? fd.link_transfer : '';
+      Object.assign(e, { title: fd.title.trim(), kind: fd.kind, date: fd.date || today(), amount: fd.kind === 'note' ? 0 : num(fd.amount), repeat: fd.repeat, catId: undefined, fundId: undefined, debtId: undefined });
+      if (lk) { const [t, id] = lk.split(':'); e[{ c: 'catId', f: 'fundId', d: 'debtId' }[t]] = id; }
+      if (isNew) { e.id = uid(); S.events.push(e); }
+      toast('Saved to calendar');
+    },
+    { del: isNew ? null : () => { S.tx.filter(t => t.src && t.src.startsWith(e.id + '@')).forEach(t => { t.src = undefined; }); S.events = S.events.filter(x => x !== e); }, after: form => {
+      const sync = () => { const v = form.kind.value; form.querySelectorAll('[data-for]').forEach(d => d.style.display = d.dataset.for === v ? '' : 'none'); form.querySelectorAll('[data-hide]').forEach(d => d.style.display = d.dataset.hide === v ? 'none' : ''); };
+      $('#ek', form).addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; form.kind.value = b.dataset.v; form.querySelectorAll('#ek button').forEach(x => x.classList.toggle('on', x === b)); sync(); });
+      sync();
+    } });
+}
+const colorField = (sel) => `<div class="swatches" id="cols">${PALETTE.slice(0, 12).map(c => `<button type="button" class="${c === sel ? 'on' : ''}" style="background:${c}" data-v="${c}"></button>`).join('')}</div><input type="hidden" name="color" value="${sel}">`;
+const colorWire = form => $('#cols', form).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; form.color.value = b.dataset.v; form.querySelectorAll('#cols button').forEach(x => x.classList.toggle('on', x === b)); });
+function fundModal(f) {
+  const isNew = !f; f = f || { name: '', saved: 0, target: '', date: '', color: PALETTE[S.funds.length % PALETTE.length] };
+  modal(isNew ? 'New savings fund' : 'Edit fund', field('Name', `<input type="text" name="name" value="${esc(f.name)}" placeholder="e.g. Emergency fund" autofocus>`) + `<div class="frow">${field('Saved so far', `<input type="number" name="saved" value="${f.saved}">`)}${field('Target', `<input type="number" name="target" value="${f.target}">`)}</div>` + field('Target date (optional)', `<input type="date" name="date" value="${f.date}">`) + field('Colour', colorField(f.color)),
+    fd => { if (!fd.name.trim()) return false; Object.assign(f, { name: fd.name.trim(), saved: num(fd.saved), target: num(fd.target), date: fd.date, color: fd.color }); if (isNew) { f.id = uid(); S.funds.push(f); } },
+    { del: isNew ? null : () => { S.funds = S.funds.filter(x => x !== f); }, after: colorWire });
+}
+function debtModal(d) {
+  const isNew = !d; d = d || { name: '', balance: '', original: '', apr: '', min: '', color: PALETTE[(S.debts.length + 3) % PALETTE.length] };
+  modal(isNew ? 'New debt' : 'Edit debt', field('Name', `<input type="text" name="name" value="${esc(d.name)}" placeholder="e.g. Visa card" autofocus>`) + `<div class="frow">${field('Balance now', `<input type="number" name="balance" value="${d.balance}">`)}${field('Starting balance (for progress)', `<input type="number" name="original" value="${d.original}">`)}</div><div class="frow">${field('Interest rate (APR %)', `<input type="number" step="0.01" name="apr" value="${d.apr}">`)}${field('Minimum payment / month', `<input type="number" name="min" value="${d.min}">`)}</div>` + field('Colour', colorField(d.color)),
+    fd => { if (!fd.name.trim()) return false; Object.assign(d, { name: fd.name.trim(), balance: num(fd.balance), original: num(fd.original) || num(fd.balance), apr: num(fd.apr), min: num(fd.min), color: fd.color }); if (isNew) { d.id = uid(); S.debts.push(d); } },
+    { del: isNew ? null : () => { S.debts = S.debts.filter(x => x !== d); }, after: colorWire });
+}
+function goalModal(g) {
+  const isNew = !g; g = g || { title: '', status: 'ns', date: '', note: '' };
+  modal(isNew ? 'New goal' : 'Edit goal', field('Goal', `<input type="text" name="title" value="${esc(g.title)}" placeholder="e.g. Pay off the Visa card" autofocus>`) + `<div class="frow">${field('Status', `<select name="status">${[['ns', 'Not started'], ['ip', 'In progress'], ['dn', 'Done']].map(([v, l]) => `<option value="${v}" ${g.status === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`)}${field('Target date', `<input type="date" name="date" value="${g.date}">`)}</div>` + field('Note', `<input type="text" name="note" value="${esc(g.note)}" placeholder="Why it matters, or the next step">`),
+    fd => { if (!fd.title.trim()) return false; Object.assign(g, { title: fd.title.trim(), status: fd.status, date: fd.date, note: fd.note.trim() }); if (isNew) { g.id = uid(); S.goals.push(g); } },
+    { del: isNew ? null : () => { S.goals = S.goals.filter(x => x !== g); } });
+}
+function catModal(c) {
+  const isNew = !c; c = c || { name: '', group: 'wants', budget: '', color: PALETTE[S.categories.length % PALETTE.length] };
+  modal(isNew ? 'New category' : 'Edit category', field('Name', `<input type="text" name="name" value="${esc(c.name)}" autofocus>`) + `<div class="frow">${field('Type', `<select name="group"><option value="needs" ${c.group === 'needs' ? 'selected' : ''}>Need</option><option value="wants" ${c.group === 'wants' ? 'selected' : ''}>Want</option></select>`)}${field('Default monthly budget', `<input type="number" name="budget" value="${c.budget}">`)}</div>` + field('Colour', colorField(c.color)),
+    fd => { if (!fd.name.trim()) return false; Object.assign(c, { name: fd.name.trim(), group: fd.group, budget: num(fd.budget), color: fd.color }); if (isNew) { c.id = 'c' + uid(); S.categories.push(c); } },
+    { del: isNew || S.categories.length < 2 ? null : () => { if (S.tx.some(t => t.catId === c.id)) { const misc = S.categories.find(x => x !== c); S.tx.forEach(t => { if (t.catId === c.id) t.catId = misc.id; }); } S.categories = S.categories.filter(x => x !== c); }, after: colorWire });
+}
+function quickMoney(title, label, onOk) { modal(title, field(label, '<input type="number" name="v" step="0.01" autofocus>') + field('Date', `<input type="date" name="d" value="${today()}">`), fd => { const v = num(fd.v); if (!v) return false; onOk(v, fd.d || today()); }, { ok: 'Add' }); }
+
+/* ---------- utilities ---------- */
+function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+function csv() {
+  const rows = [['Date', 'Type', 'Category / Fund / Debt', 'Name', 'Amount', 'Notes']];
+  S.tx.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(t => rows.push([t.date, t.type, t.type === 'expense' ? cat(t.catId)?.name : t.type === 'saving' ? fund(t.fundId)?.name : t.type === 'debt' ? debt(t.debtId)?.name : 'Income', t.name, t.amount.toFixed(2), t.note]));
+  download('clear-cents-transactions-' + today() + '.csv', rows.map(r => r.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n'), 'text/csv');
+}
+let toastT; function toast(msg) { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2200); }
+
+/* ---------- events ---------- */
+function onClick(ev) {
+  const nav = ev.target.closest('a[data-view]'); if (nav) { ev.preventDefault(); go(nav.dataset.view); return; }
+  const b = ev.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, id = b.dataset.id, v = b.dataset.v;
+  const acts = {
+    log: () => txModal(), tx: () => txModal(S.tx.find(t => t.id === id)),
+    menu: () => $('#shell').classList.toggle('open'),
+    theme: () => { const dark = document.documentElement.dataset.theme === 'dark'; S.settings.theme = dark ? 'light' : 'dark'; save(); render(); },
+    go: () => go(v), vym: () => { viewYM = v; render(); }, cym: () => { calYM = v; render(); }, openmonth: () => { viewYM = v; go('month'); },
+    event: () => id ? eventModal(S.events.find(e => e.id === id)) : eventModal(null, b.dataset.kind ? { kind: b.dataset.kind, title: b.dataset.kind === 'payday' ? 'Paycheck' : '' } : {}),
+    newevent: () => eventModal(null, { date: b.dataset.d, repeat: 'none' }),
+    paid: () => { const e = S.events.find(x => x.id === id); const d = b.dataset.d; markPaid(e, d, !e.paid[d]); save(); render(); toast(e.paid[d] ? (e.kind === 'payday' ? 'Payday recorded 💸' : 'Marked paid ✓') : 'Unmarked'); },
+    income: () => modal('Expected income — ' + monthName(viewYM), field('How much do you expect to bring in this month?', `<input type="number" name="v" value="${(S.months[viewYM] || {}).incomePlan || ''}" autofocus>`) + '<p class="muted small" style="margin-top:-4px">Leave empty to use the paydays on your calendar.</p>', fd => { (S.months[viewYM] ||= { budgets: {} }).incomePlan = num(fd.v); }),
+    fund: () => fundModal(fund(id)), debt: () => debtModal(debt(id)), goal: () => goalModal(S.goals.find(g => g.id === id)), cat: () => catModal(cat(id)),
+    addmoney: () => { const f = fund(id); quickMoney('Add to ' + f.name, 'Amount to add', (amt, d) => { const t = { id: uid(), type: 'saving', fundId: f.id, amount: amt, date: d, name: 'Transfer to ' + f.name, note: '' }; S.tx.push(t); applyTx(t, 1); toast('Added to ' + f.name); }); },
+    paydebt: () => { const d = debt(id); quickMoney('Payment to ' + d.name, 'Payment amount', (amt, dt) => { const t = { id: uid(), type: 'debt', debtId: d.id, amount: amt, date: dt, name: d.name + ' payment', note: '' }; S.tx.push(t); applyTx(t, 1); toast('Payment recorded'); }); },
+    strat: () => { S.debtPlan.strategy = v; save(); render(); },
+    cycle: () => { const g = S.goals.find(x => x.id === id); g.status = { ns: 'ip', ip: 'dn', dn: 'ns' }[g.status]; save(); render(); },
+    nospend: () => { const t = today(); if (S.nospend[t]) delete S.nospend[t]; else { S.nospend[t] = true; toast('Nice! No-spend day logged 🌱'); } save(); render(); },
+    settheme: () => { S.settings.theme = v; save(); render(); }, accent: () => { S.settings.accent = v; save(); render(); },
+    backup: () => { download('clear-cents-backup-' + today() + '.json', JSON.stringify(S, null, 1), 'application/json'); toast('Backup downloaded'); },
+    restore: () => $('#restorefile').click(), csv: () => csv(),
+    sample: () => { if (confirm('Replace your planner with sample data? (Download a backup first if you want to keep yours.)')) { S = sampleState(); fmtCache = {}; save(); render(); } },
+    wipe: () => { if (confirm('Erase everything in this planner? This can’t be undone.')) { S = blankState(); save(); go('start'); } },
+    'demo-reset': () => { S = sampleState(); fmtCache = {}; save(); render(); toast('Demo reset'); },
+  };
+  if (acts[a]) { ev.preventDefault(); acts[a](); }
+}
+
+/* ---------- boot ---------- */
+load(); shell();
+document.addEventListener('click', onClick);
+const fromHash = () => { const h = location.hash.slice(1); if (VIEWS[h]) { view = h; render(); } };
+window.addEventListener('hashchange', fromHash);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => S.settings.theme === 'auto' && applyTheme());
+const h0 = location.hash.slice(1); view = VIEWS[h0] ? h0 : (MODE !== 'demo' && !S.tx.length && !S.events.length ? 'start' : 'today');
+render();
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && MODE !== 'offline') navigator.serviceWorker.register('/sw.js').catch(() => {});
+window.__cc = { get S() { return S; }, go };
+})();
+</script>
+</body>
+</html>
